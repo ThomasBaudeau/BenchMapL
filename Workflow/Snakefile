@@ -1,0 +1,79 @@
+configfile: '../config/config.yaml'
+
+def getparam(wildcards):
+    print(wildcards.param.replace("#",' '))
+    return wildcards.param.replace("#",' ')
+
+rule all_minimap2:
+    input:
+        expand("mapped_reads/minimap2_{name}_{param}.sam",zip,param=config['param']['minimap2']['command'],name=config['param']['minimap2']['name'])
+
+rule minimap2:
+    input:
+        ref=config["ref"],
+        reads= config["dataset"]
+    output:
+        "mapped_reads/minimap2_{name}_{param}.sam"
+    params:
+        getparam
+    shell:
+        "~/bin/minimap2-2.24/minimap2 {params} {input.ref} {input.reads} > {output}"
+
+rule all_graphmap2:
+    input:
+        expand("mapped_reads/graphmap2_{name}_{param}.sam",zip,param=config['param']['graphmap2']['command'],name=config['param']['graphmap2']['name'])
+
+rule graphmap2:
+    input:
+        ref=config["ref"],
+        reads= config["dataset"]
+    output:
+        "mapped_reads/graphmap2_{name}_{param}.sam"
+    params:
+        getparam
+    shell:
+        "/home/bonsai/bin/graphmap2/graphmap2/bin/Linux-x64/graphmap2 {params} -r {input.ref} -d {input.reads} > {output}"
+
+
+
+""""
+rule graphmap:
+    input:
+        "data/sequence.fasta",
+        "data/samples/simulated_unaligned_reads.fasta"
+    output:
+        "mapped_reads/minimap2_simureads.sam"
+    shell:
+
+rule minimap:
+    input:
+        "data/sequence.fasta",
+        "data/samples/simulated_unaligned_reads.fasta"
+    output:
+        "mapped_reads/minimap2_simureads.sam"
+    shell:
+
+rule blasr:
+    input:
+        "data/sequence.fasta",
+        "data/samples/simulated_unaligned_reads.fasta"
+    output:
+        "mapped_reads/minimap2_simureads.sam"
+    shell:
+
+rule stampy:
+    input:
+        "data/sequence.fasta",
+        "data/samples/simulated_unaligned_reads.fasta"
+    output:
+        "mapped_reads/minimap2_simureads.sam"
+    shell:
+
+rule fast_mm2:
+    input:
+        "data/sequence.fasta",
+        "data/samples/simulated_unaligned_reads.fasta"
+    output:
+        "mapped_reads/minimap2_simureads.sam"
+    shell:
+"""

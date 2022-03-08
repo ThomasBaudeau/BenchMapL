@@ -1,0 +1,9 @@
+dataset: data/samples/simulated_unaligned_reads.fasta
+ref: data/sequence.fasta
+param:
+  minimap2: {
+    name: ['test','default'],
+    command: ['-a','-ax#map-ont']}
+  graphmap2: {
+    name: ['default'],
+    command: ['align']}
