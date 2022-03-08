@@ -3,10 +3,12 @@ bin-debug/
 bin-release/
 [Oo]bj/
 [Bb]in/
+Workflow/mapped_reads
+
 
 # Other files and folders
 .settings/
-
+.snakemake/
 # Executables
 *.swf
 *.air
