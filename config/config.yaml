@@ -2,14 +2,11 @@ dataset: data/samples/dataconvert.fasta
 ref: data/sequence.fasta
 param:
   minimap2: {
-    name: ['test','default'],
-    command: ['-a','-ax#map-ont']}
-  minimap: {
     name: ['default'],
-    command: ['#']}
+    command: ['-ax#map-ont']}
   mm2f: {
-    name: ['test','default'],
-    command: ['-a','-ax#map-ont']}
+    name: ['default'],
+    command: ['-ax#map-ont']}
   graphmap2: {
     name: ['default'],
     command: ['align']}
@@ -19,6 +16,9 @@ param:
   blasr: {
     name: ['default'],
     command: ['--sam']}
-  stampy: {
-    name: ['default'],
-    command: ['#']}
+  #stampy: {
+  #  name: ['default'],
+  #  command: ['#']}
+  #minimap: {
+  #  name: ['default'],
+  #  command: ['#']}

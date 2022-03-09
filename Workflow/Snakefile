@@ -1,9 +1,32 @@
 configfile: '../config/config.yaml'
 
+TOOLS= [a for a in config['param']]
+
+
+
 def getparam(wildcards):
     print(wildcards.param.replace("#",' '))
     return wildcards.param.replace("#",' ')
 
+rule all_default:
+    input:
+        expand("stat_tools/{tool}_default_{param}.stat.txt",zip,tool=TOOLS,param=[config['param'][tool]['command'][0] for tool in TOOLS ])
+
+rule sam_stat:
+    input:
+        "mapped_reads/{tool}_{name}_{param}.bam"
+    output:
+        "stat_tools/{tool}_{name}_{param}.stat.txt"
+    shell:
+       "/home/bonsai/bin/SamTool/samtools/samtools stats {input} > {output}"
+
+rule sam_bam:
+    input:
+        "mapped_reads/{tool}_{name}_{param}.sam"
+    output:
+        "mapped_reads/{tool}_{name}_{param}.bam"
+    shell:
+       "/home/bonsai/bin/SamTool/samtools/samtools view -S -b {input} > {output}"
 rule all_minimap2:
     input:
         expand("mapped_reads/minimap2_{name}_{param}.sam",zip,param=config['param']['minimap2']['command'],name=config['param']['minimap2']['name'])
@@ -50,20 +73,6 @@ rule graphmap:
     shell:
         "~/bin/graphmap/graphmap/bin/Linux-x64/graphmap {params} -r {input.ref} -d {input.reads} > {output}"
 
-rule all_minimap:
-    input:
-        expand("mapped_reads/minimap_{name}_{param}.sam",zip,param=config['param']['minimap']['command'],name=config['param']['minimap']['name'])
-
-rule minimap:
-    input:
-        ref=config["ref"],
-        reads= config["dataset"]
-    output:
-        "mapped_reads/minimap_{name}_{param}.sam"
-    params:
-        getparam
-    shell:
-        "~/bin/minimap-0.2/minimap {params} {input.ref} {input.reads} -V > {output}"
 
 rule all_mm2f:
     input:
@@ -96,6 +105,8 @@ rule blasr:
     shell:
         "blasr {input.reads} {input.ref} {params} --out {output}> {output}"
 
+
+"""
 rule all_stampy:
     input:
         expand("mapped_reads/stampy_{name}_{param}.sam",zip,param=config['param']['stampy']['command'],name=config['param']['stampy']['name'])
@@ -112,4 +123,20 @@ rule stampy_gen:
     shell:
         'python2 /home/bonsai/bin/stampy-1.0.32/stampy.py -G temp {input.ref} ;python2 /home/bonsai/bin/stampy-1.0.32/stampy.py -g temp -H temp;python2 /home/bonsai/bin/stampy-1.0.32/stampy.py -g temp -h temp -M {input.ref} > {output}'
 
+"""
+"""
+rule all_minimap:
+    input:
+        expand("mapped_reads/minimap_{name}_{param}.sam",zip,param=config['param']['minimap']['command'],name=config['param']['minimap']['name'])
 
+rule minimap:
+    input:
+        ref=config["ref"],
+        reads= config["dataset"]
+    output:
+        "mapped_reads/minimap_{name}_{param}.sam"
+    params:
+        getparam
+    shell:
+        "~/bin/minimap-0.2/minimap {params} {input.ref} {input.reads} > {output}"
+"""
