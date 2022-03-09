@@ -90,47 +90,26 @@ rule blasr:
     output:
         "mapped_reads/blasr_{name}_{param}.sam"
     conda:
-        'pyt36'
+        "pyt36"
     params:
         getparam
     shell:
         "blasr {input.reads} {input.ref} {params} --out {output}> {output}"
 
-"""
 rule all_stampy:
     input:
         expand("mapped_reads/stampy_{name}_{param}.sam",zip,param=config['param']['stampy']['command'],name=config['param']['stampy']['name'])
 
-rule stampy_ref:
-    input:
-        ref=config["ref"]
-    output:
-        "mapped_reads/stampy_ref_{name}_{param}"
-    shell:
-        './stampy.py -G {output} {input.ref} >{output}'
-
-rule stampy_hash:
-    input:
-        "mapped_reads/stampy_ref_{name}_{param}",
-    output:
-        "mapped_reads/stampy_hash_{name}_{param}"
-    params:
-        getparam
-    shell:
-        "./stampy.py -g {input} -H {output}"
 
 rule stampy_gen:
     input:
-        "mapped_reads/stampy_hash_{name}_{param}"
-        "data/samples/simulated_unaligned_reads.fasta"
+        ref=config["ref"],
+        reads= config["dataset"]
     output:
         'mapped_reads/stampy_{name}_{param}.sam'
     params:
         getparam
     shell:
-        ./stampy.py -g hg18 -h hg18 --processpart=3/8 \
-     		 -M reads.fastq.gz
+        'python2 /home/bonsai/bin/stampy-1.0.32/stampy.py -G temp {input.ref} ;python2 /home/bonsai/bin/stampy-1.0.32/stampy.py -g temp -H temp;python2 /home/bonsai/bin/stampy-1.0.32/stampy.py -g temp -h temp -M {input.ref} > {output}'
 
 
-
-"""

@@ -1,4 +1,4 @@
-dataset: data/samples/simulated_unaligned_reads.fasta
+dataset: data/samples/dataconvert.fasta
 ref: data/sequence.fasta
 param:
   minimap2: {
@@ -21,4 +21,4 @@ param:
     command: ['--sam']}
   stampy: {
     name: ['default'],
-    command: ['--bam']}
+    command: ['#']}
