@@ -4,6 +4,21 @@ param:
   minimap2: {
     name: ['test','default'],
     command: ['-a','-ax#map-ont']}
+  minimap: {
+    name: ['default'],
+    command: ['#']}
+  mm2f: {
+    name: ['test','default'],
+    command: ['-a','-ax#map-ont']}
   graphmap2: {
     name: ['default'],
     command: ['align']}
+  graphmap: {
+    name: ['default'],
+    command: ['align#--minimizer-window#1']}
+  blasr: {
+    name: ['default'],
+    command: ['--sam']}
+  stampy: {
+    name: ['default'],
+    command: ['--bam']}

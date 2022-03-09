@@ -35,45 +35,102 @@ rule graphmap2:
         "/home/bonsai/bin/graphmap2/graphmap2/bin/Linux-x64/graphmap2 {params} -r {input.ref} -d {input.reads} > {output}"
 
 
+rule all_graphmap:
+    input:
+        expand("mapped_reads/graphmap_{name}_{param}.sam",zip,param=config['param']['graphmap']['command'],name=config['param']['graphmap']['name'])
 
-""""
 rule graphmap:
     input:
-        "data/sequence.fasta",
-        "data/samples/simulated_unaligned_reads.fasta"
+        ref=config["ref"],
+        reads= config["dataset"]
     output:
-        "mapped_reads/minimap2_simureads.sam"
+        "mapped_reads/graphmap_{name}_{param}.sam"
+    params:
+        getparam
     shell:
+        "~/bin/graphmap/graphmap/bin/Linux-x64/graphmap {params} -r {input.ref} -d {input.reads} > {output}"
+
+rule all_minimap:
+    input:
+        expand("mapped_reads/minimap_{name}_{param}.sam",zip,param=config['param']['minimap']['command'],name=config['param']['minimap']['name'])
 
 rule minimap:
     input:
-        "data/sequence.fasta",
-        "data/samples/simulated_unaligned_reads.fasta"
+        ref=config["ref"],
+        reads= config["dataset"]
     output:
-        "mapped_reads/minimap2_simureads.sam"
+        "mapped_reads/minimap_{name}_{param}.sam"
+    params:
+        getparam
     shell:
+        "~/bin/minimap-0.2/minimap {params} {input.ref} {input.reads} -V > {output}"
 
+rule all_mm2f:
+    input:
+        expand("mapped_reads/mm2f_{name}_{param}.sam",zip,param=config['param']['mm2f']['command'],name=config['param']['mm2f']['name'])
+
+rule mm2f:
+    input:
+        ref=config["ref"],
+        reads= config["dataset"]
+    output:
+        "mapped_reads/mm2f_{name}_{param}.sam"
+    params:
+        getparam
+    shell:
+        "~/bin/mm2-fast/mm2-fast/minimap2 {params} {input.ref} {input.reads} > {output}"
+
+rule all_blasr:
+    input:
+        expand("mapped_reads/blasr_{name}_{param}.sam",zip,param=config['param']['blasr']['command'],name=config['param']['blasr']['name'])
 rule blasr:
     input:
-        "data/sequence.fasta",
-        "data/samples/simulated_unaligned_reads.fasta"
+        ref=config["ref"],
+        reads= config["dataset"]
     output:
-        "mapped_reads/minimap2_simureads.sam"
+        "mapped_reads/blasr_{name}_{param}.sam"
+    conda:
+        'pyt36'
+    params:
+        getparam
     shell:
+        "blasr {input.reads} {input.ref} {params} --out {output}> {output}"
 
-rule stampy:
+"""
+rule all_stampy:
     input:
-        "data/sequence.fasta",
-        "data/samples/simulated_unaligned_reads.fasta"
-    output:
-        "mapped_reads/minimap2_simureads.sam"
-    shell:
+        expand("mapped_reads/stampy_{name}_{param}.sam",zip,param=config['param']['stampy']['command'],name=config['param']['stampy']['name'])
 
-rule fast_mm2:
+rule stampy_ref:
     input:
-        "data/sequence.fasta",
+        ref=config["ref"]
+    output:
+        "mapped_reads/stampy_ref_{name}_{param}"
+    shell:
+        './stampy.py -G {output} {input.ref} >{output}'
+
+rule stampy_hash:
+    input:
+        "mapped_reads/stampy_ref_{name}_{param}",
+    output:
+        "mapped_reads/stampy_hash_{name}_{param}"
+    params:
+        getparam
+    shell:
+        "./stampy.py -g {input} -H {output}"
+
+rule stampy_gen:
+    input:
+        "mapped_reads/stampy_hash_{name}_{param}"
         "data/samples/simulated_unaligned_reads.fasta"
     output:
-        "mapped_reads/minimap2_simureads.sam"
+        'mapped_reads/stampy_{name}_{param}.sam'
+    params:
+        getparam
     shell:
+        ./stampy.py -g hg18 -h hg18 --processpart=3/8 \
+     		 -M reads.fastq.gz
+
+
+
 """
