@@ -10,13 +10,8 @@ def getparam(wildcards):
 
 rule all_default:
     input:
-        expand("stat_tools/{tool}_default_{param}.stat.txt",zip,tool=TOOLS,param=[config['param'][tool]['command'][0] for tool in TOOLS ])
-    output:
-        "final/test.png"
-    conda:
-        "pyt36"
-    script:
-        'scripts/test.py'
+        expand("mapped_reads/{tool}_default_{param}.stat.txt",zip,tool=TOOLS,param=[config['param'][tool]['command'][0] for tool in TOOLS ])
+
 rule final:
     input :
         "final/test.png"
@@ -26,8 +21,11 @@ rule plot_test:
        "stat_tools/{tool}_{name}_{param}.stat.txt"
     output:
         "final/test.png"
+    conda:
+        "pyt36"
     script:
         'scripts/test.py'
+        
 rule sam_stat:
     input:
         "mapped_reads/{tool}_{name}_{param}.bam"
@@ -43,6 +41,7 @@ rule sam_bam:
         "mapped_reads/{tool}_{name}_{param}.bam"
     shell:
        "/home/bonsai/bin/SamTool/samtools/samtools sort {input} > {output}"
+
 rule all_minimap2:
     input:
         expand("mapped_reads/minimap2_{name}_{param}.sam",zip,param=config['param']['minimap2']['command'],name=config['param']['minimap2']['name'])
@@ -108,6 +107,8 @@ rule mm2f:
 rule all_blasr:
     input:
         expand("mapped_reads/blasr_{name}_{param}.sam",zip,param=config['param']['blasr']['command'],name=config['param']['blasr']['name'])
+
+
 rule blasr:
     input:
         ref=config["ref"],

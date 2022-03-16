@@ -1,4 +1,4 @@
-dataset: data/samples/dataconvert.fasta
+dataset: data/samples/convert_read.fasta
 ref: data/sequence.fasta
 param:
   minimap2: {
@@ -9,10 +9,10 @@ param:
     command: ['-ax#map-ont']}
   graphmap2: {
     name: ['default'],
-    command: ['align']}
+    command: ['align#-a#sggotoh']}
   graphmap: {
     name: ['default'],
-    command: ['align#--minimizer-window#1']}
+    command: ['align#-x#sensitive']}
   blasr: {
     name: ['default'],
     command: ['--sam']}
