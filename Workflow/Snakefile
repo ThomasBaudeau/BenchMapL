@@ -10,21 +10,21 @@ def getparam(wildcards):
 
 rule all_default:
     input:
-        expand("mapped_reads/{tool}_default_{param}.stat.txt",zip,tool=TOOLS,param=[config['param'][tool]['command'][0] for tool in TOOLS ])
+        expand( "stat_tools/{tool}_default_{param}.stat.txt",zip,tool=TOOLS,param=[config['param'][tool]['command'][0] for tool in TOOLS ])
 
 rule final:
     input :
-        "final/test.png"
+        "plots/test1.png"
 
 rule plot_test:
     input:
-       "stat_tools/{tool}_{name}_{param}.stat.txt"
+       expand("mapped_reads/{tool}_default_{param}.bam",zip,tool=TOOLS,param=[config['param'][tool]['command'][0] for tool in TOOLS ])
     output:
-        "final/test.png"
+        "plots/test1.png"
     conda:
-        "pyt36"
+        "env/plotscript.yaml"
     script:
-        'scripts/test.py'
+        'scripts/test2.py'
         
 rule sam_stat:
     input:

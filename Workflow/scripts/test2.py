@@ -1,6 +1,5 @@
 import pysam
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 Tools=['mapped_reads/graphmap_default_align#-x#sensitive.bam','mapped_reads/mm2f_default_-ax#map-ont.bam','mapped_reads/minimap2_default_-ax#map-ont.bam','mapped_reads/graphmap2_default_align#-a#sggotoh.bam','mapped_reads/blasr_default_--sam.bam']
 
@@ -105,7 +104,7 @@ def plot_histoMU(results):
     ax.set_title('number of reads by status and tools')
     ax.legend()
     print(d1)
-    plt.show()
+    plt.savefig(snakemake.output[0])
 
 def get_label(results):
     labels=[]
@@ -179,16 +178,21 @@ def multiple_cor(results):
     plt.xticks([])
     plt.title('proportion of correctly mapped read by tools and error')
 
-    plt.show()
+    plt.savefig(snakemake.output[0])
 
-results=[]
-for tool in Tools:
-    bamFP = pysam.AlignmentFile(tool, "rb")
-    name=parsepath(tool)
-    count=0
-    resu=countdiff(bamFP)
-    print(resu)
-    resu.setname(name)
-    results.append(resu)
-multiple_cor(results)    
-plot_histoMU(results)   
+
+
+def do_something(data_path, out_path, myparam):
+    files=list(snakemake.input)
+    results=[]
+    for tool in files:
+        bamFP = pysam.AlignmentFile(tool, "rb")
+        name=parsepath(tool)
+        count=0
+        resu=countdiff(bamFP)
+        print(resu)
+        resu.setname(name)
+        results.append(resu)
+    multiple_cor(results)    
+    #plot_histoMU(results)   
+do_something(snakemake.input[0], snakemake.output[0], snakemake.config["param"])

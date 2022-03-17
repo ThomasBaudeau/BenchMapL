@@ -1,0 +1,11 @@
+channels:
+  - conda-forge
+  - anaconda
+  - bioconda
+  - r
+  
+dependencies:
+  - python = 3.8
+  - biopython
+  - matplotlib
+  - pysam=0.18.0
