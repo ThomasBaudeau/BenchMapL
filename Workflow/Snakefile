@@ -193,7 +193,7 @@ rule lra:
     params:
         getparam
     shell:
-        "lra index -CCS/CLR/ONT/CONTIG {input.ref};lra align -CCS/CLR/ONT/CONTIG {input.ref} {input.reads} {params} -p s > {output}"
+        "lra index -ONT -W 8 -F 400 {input.ref};lra align -ONT {input.ref} {input.reads} {params} -p s > {output};rm {input.ref}.gli;rm {input.ref}.mmi"
 
 """
 rule all_mashmap:
