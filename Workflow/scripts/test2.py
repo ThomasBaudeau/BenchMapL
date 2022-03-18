@@ -178,7 +178,7 @@ def multiple_cor(results):
     plt.xticks([])
     plt.title('proportion of correctly mapped read by tools and error')
 
-    plt.savefig(snakemake.output[0])
+    plt.savefig(snakemake.output[1])
 
 
 
@@ -194,5 +194,5 @@ def do_something(data_path, out_path, myparam):
         resu.setname(name)
         results.append(resu)
     multiple_cor(results)    
-    #plot_histoMU(results)   
+    plot_histoMU(results)   
 do_something(snakemake.input[0], snakemake.output[0], snakemake.config["param"])

@@ -1,0 +1,8 @@
+channels:
+  - conda-forge
+dependencies:
+  - python = 3.8
+  - libdeflate 
+  - htslib
+  - zlib
+  - lra

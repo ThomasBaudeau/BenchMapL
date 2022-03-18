@@ -14,13 +14,15 @@ rule all_default:
 
 rule final:
     input :
-        "plots/test1.png"
+        "plots/test1.png",
+        "plots/test2.png"
 
 rule plot_test:
     input:
        expand("mapped_reads/{tool}_default_{param}.bam",zip,tool=TOOLS,param=[config['param'][tool]['command'][0] for tool in TOOLS ])
     output:
-        "plots/test1.png"
+        "plots/test1.png",
+        "plots/test2.png"
     conda:
         "env/plotscript.yaml"
     script:
@@ -122,8 +124,95 @@ rule blasr:
     shell:
         "blasr {input.reads} {input.ref} {params} --out {output}> {output}"
 
+rule all_winnowmap:
+    input:
+        expand("mapped_reads/winnowmap_{name}_{param}.sam",zip,param=config['param']['winnowmap']['command'],name=config['param']['winnowmap']['name'])
+
+
+rule winnowmap:
+    input:
+        ref=config["ref"],
+        reads= config["dataset"],
+        meril=directory('temps')
+    output:
+        "mapped_reads/winnowmap_{name}_{param}.sam"
+    conda:
+        "pyt36"
+    params:
+        getparam
+    shell:
+        " ~/bin/winomap/Winnowmap/bin/winnowmap -W {input.meril} {params} {input.ref} {input.reads} > {output}"
+
+rule pre_winnowmap_1:
+    input:
+        config["ref"]
+    output:
+        temp(directory('temps'))
+        
+    shell:
+       " ~/bin/winomap/Winnowmap/bin/meryl count k=15 output {output} {input}"
+
+rule pre_winnowmap_2:
+    input:
+        'temps'
+    output:
+        temp('mapped_reads/repetitive_k15_meril.txt')
+    shell:
+       " ~/bin/winomap/Winnowmap/bin/meryl print greater-than distinct=0.9998 merylDB> {output}"
+
+rule all_magicblast:
+    input:
+        expand("mapped_reads/magicblast_{name}_{param}.sam",zip,param=config['param']['magicblast']['command'],name=config['param']['magicblast']['name'])
+
+
+rule magicblast:
+    input:
+        ref=config["ref"],
+        reads= config["dataset"]
+    output:
+        "mapped_reads/magicblast_{name}_{param}.sam"
+    conda:
+        "env/magicblast.yaml"
+    params:
+        getparam
+    shell:
+        "makeblastdb -in {input.ref} -out tempdb/aname -parse_seqids -dbtype nucl; magicblast -query {params} {input.reads} -db tempdb/aname -out {output};rm tempdb -r"
+
+rule all_lra:
+    input:
+        expand("mapped_reads/magicblast_{name}_{param}.sam",zip,param=config['param']['lra']['command'],name=config['param']['lra']['name'])
+
+rule lra:
+    input:
+        ref=config["ref"],
+        reads= config["dataset"]
+    output:
+        "mapped_reads/lra_{name}_{param}.sam"
+    conda:
+        "env/lra.yaml"
+    params:
+        getparam
+    shell:
+        "lra index -CCS/CLR/ONT/CONTIG {input.ref};lra align -CCS/CLR/ONT/CONTIG {input.ref} {input.reads} {params} -p s > {output}"
 
 """
+rule all_mashmap:
+    input:
+        expand("mapped_reads/mashmap_{name}_{param}.sam",zip,param=config['param']['mashmap']['command'],name=config['param']['mashmap']['name'])
+
+rule mashmap:
+    input:
+        ref=config["ref"],
+        reads= config["dataset"],
+    output:
+        "mapped_reads/mashmap_{name}_{param}.sam"
+    conda:
+        "pyt36"
+    params:
+        getparam
+    shell:
+        " ~/bin/mashmap/MashMap/mashmap -r {params} {input.ref} -q {input.reads} -o {output}"
+
 rule all_stampy:
     input:
         expand("mapped_reads/stampy_{name}_{param}.sam",zip,param=config['param']['stampy']['command'],name=config['param']['stampy']['name'])

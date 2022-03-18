@@ -16,6 +16,15 @@ param:
   blasr: {
     name: ['default'],
     command: ['--sam']}
+  winnowmap: {
+    name: ['default'],
+    command: ['-ax#map-ont']}
+  magicblast: {
+    name: ['default'],
+    command: ['#']}
+  lra: {
+    name: ['default'],
+    command: ['-t#16']}
   #stampy: {
   #  name: ['default'],
   #  command: ['#']}
