@@ -1,7 +1,6 @@
 configfile: '../config/config.yaml'
 
-TOOLS= [a for a in config['param']]
-
+TOOLS= [tool for tool in config['param']]
 
 
 def getparam(wildcards):
@@ -42,7 +41,7 @@ rule sam_bam:
     output:
         "mapped_reads/{tool}_{name}_{param}.bam"
     shell:
-       "/home/bonsai/bin/SamTool/samtools/samtools sort {input} > {output}"
+       "/home/bonsai/bin/SamTool/samtools/samtools sort {input} > {output};rm data/*.fasta.gmidx"
 
 rule all_minimap2:
     input:
@@ -54,10 +53,12 @@ rule minimap2:
         reads= config["dataset"]
     output:
         "mapped_reads/minimap2_{name}_{param}.sam"
+    conda:
+        "env/minimap2.yaml"
     params:
         getparam
     shell:
-        "~/bin/minimap2-2.24/minimap2 {params} {input.ref} {input.reads} > {output}"
+        "minimap2 {params} {input.ref} {input.reads} > {output}"
 
 rule all_graphmap2:
     input:
@@ -69,10 +70,12 @@ rule graphmap2:
         reads= config["dataset"]
     output:
         "mapped_reads/graphmap2_{name}_{param}.sam"
+    conda:
+        "env/graphmap2.yaml"
     params:
         getparam
     shell:
-        "/home/bonsai/bin/graphmap2/graphmap2/bin/Linux-x64/graphmap2 {params} -r {input.ref} -d {input.reads} > {output}"
+        "graphmap2 {params} -r {input.ref} -d {input.reads} > {output}"
 
 
 rule all_graphmap:
@@ -85,10 +88,12 @@ rule graphmap:
         reads= config["dataset"]
     output:
         "mapped_reads/graphmap_{name}_{param}.sam"
+    conda:
+        "env/graphmap.yaml"
     params:
         getparam
     shell:
-        "~/bin/graphmap/graphmap/bin/Linux-x64/graphmap {params} -r {input.ref} -d {input.reads} > {output}"
+        "graphmap {params} -r {input.ref} -d {input.reads} > {output}"
 
 
 rule all_mm2f:
@@ -118,7 +123,7 @@ rule blasr:
     output:
         "mapped_reads/blasr_{name}_{param}.sam"
     conda:
-        "pyt36"
+        "env/blasr.yaml"
     params:
         getparam
     shell:
@@ -137,28 +142,31 @@ rule winnowmap:
     output:
         "mapped_reads/winnowmap_{name}_{param}.sam"
     conda:
-        "pyt36"
+        "env/winnowmap.yaml"
     params:
         getparam
     shell:
-        " ~/bin/winomap/Winnowmap/bin/winnowmap -W {input.meril} {params} {input.ref} {input.reads} > {output}"
+        "winnowmap -W {input.meril} {params} {input.ref} {input.reads} > {output}"
 
 rule pre_winnowmap_1:
     input:
         config["ref"]
     output:
         temp(directory('temps'))
-        
+    conda:
+        "env/winnowmap.yaml"
     shell:
-       " ~/bin/winomap/Winnowmap/bin/meryl count k=15 output {output} {input}"
+       "meryl count memory=16 threads=10 k=19 output {output} {input}"
 
 rule pre_winnowmap_2:
     input:
         'temps'
     output:
         temp('mapped_reads/repetitive_k15_meril.txt')
+    conda:
+        "env/winnowmap.yaml"
     shell:
-       " ~/bin/winomap/Winnowmap/bin/meryl print greater-than distinct=0.9998 merylDB> {output}"
+       "meryl print greater-than distinct=0.9998 merylDB> {output}"
 
 rule all_magicblast:
     input:
@@ -194,55 +202,3 @@ rule lra:
         getparam
     shell:
         "lra index -ONT -W 8 -F 400 {input.ref};lra align -ONT {input.ref} {input.reads} {params} -p s > {output};rm {input.ref}.gli;rm {input.ref}.mmi"
-
-"""
-rule all_mashmap:
-    input:
-        expand("mapped_reads/mashmap_{name}_{param}.sam",zip,param=config['param']['mashmap']['command'],name=config['param']['mashmap']['name'])
-
-rule mashmap:
-    input:
-        ref=config["ref"],
-        reads= config["dataset"],
-    output:
-        "mapped_reads/mashmap_{name}_{param}.sam"
-    conda:
-        "pyt36"
-    params:
-        getparam
-    shell:
-        " ~/bin/mashmap/MashMap/mashmap -r {params} {input.ref} -q {input.reads} -o {output}"
-
-rule all_stampy:
-    input:
-        expand("mapped_reads/stampy_{name}_{param}.sam",zip,param=config['param']['stampy']['command'],name=config['param']['stampy']['name'])
-
-
-rule stampy_gen:
-    input:
-        ref=config["ref"],
-        reads= config["dataset"]
-    output:
-        'mapped_reads/stampy_{name}_{param}.sam'
-    params:
-        getparam
-    shell:
-        'python2 /home/bonsai/bin/stampy-1.0.32/stampy.py -G temp {input.ref} ;python2 /home/bonsai/bin/stampy-1.0.32/stampy.py -g temp -H temp;python2 /home/bonsai/bin/stampy-1.0.32/stampy.py -g temp -h temp -M {input.ref} > {output}'
-
-"""
-"""
-rule all_minimap:
-    input:
-        expand("mapped_reads/minimap_{name}_{param}.sam",zip,param=config['param']['minimap']['command'],name=config['param']['minimap']['name'])
-
-rule minimap:
-    input:
-        ref=config["ref"],
-        reads= config["dataset"]
-    output:
-        "mapped_reads/minimap_{name}_{param}.sam"
-    params:
-        getparam
-    shell:
-        "~/bin/minimap-0.2/minimap {params} {input.ref} {input.reads} > {output}"
-"""

@@ -9,7 +9,7 @@ param:
     command: ['-ax#map-ont']}
   graphmap2: {
     name: ['default'],
-    command: ['align#-a#sggotoh']}
+    command: ['align#-a#sg#--auto-rebuild-index#']}
   graphmap: {
     name: ['default'],
     command: ['align#-x#sensitive']}

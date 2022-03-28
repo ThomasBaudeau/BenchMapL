@@ -1,0 +1,4 @@
+channels:
+  - bioconda
+dependencies:
+  - graphmap = 0.5.2
