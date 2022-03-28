@@ -41,7 +41,7 @@ rule sam_bam:
     output:
         "mapped_reads/{tool}_{name}_{param}.bam"
     shell:
-       "/home/bonsai/bin/SamTool/samtools/samtools sort {input} > {output};rm data/*.fasta.gmidx"
+       "/home/bonsai/bin/SamTool/samtools/samtools sort {input} > {output}"
 
 rule all_minimap2:
     input:
@@ -127,7 +127,7 @@ rule blasr:
     params:
         getparam
     shell:
-        "blasr {input.reads} {input.ref} {params} --out {output}> {output}"
+        "blasr {input.reads} {input.ref} {params} --out {output}> {output};rm data/*.fasta.gmidx"
 
 rule all_winnowmap:
     input:
