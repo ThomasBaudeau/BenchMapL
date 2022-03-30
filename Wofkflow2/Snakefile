@@ -1,0 +1,50 @@
+configfile: '../config/config2.yaml'
+
+rule all:
+    input:
+        expand("{species}_reads.fasta",species=['vih'])
+
+rule analyse_phase:
+    input:
+        ref="data/ref_{species}.fasta",
+        read="data/read_{species}.fastq"
+    conda:
+        "envs/nanosim.yaml"
+    output:
+        temp("simu_{species}")
+    shell:
+        "read_analysis.py genome -i {input.read} -rg {input.ref} -o {output} -t 20;touch {output}"
+
+rule simu_phase:
+    input:
+        ref="data/ref_{species}.fasta",
+        folder="simu_{species}"
+    conda: 
+        "envs/nanosim.yaml"
+    output:
+        "simulated_{species}"
+    params:
+        number='1000',
+        seed= config['seed']
+    shell:
+        "simulator.py genome -rg {input.ref} -c {input.folder} -o {output} -n {params.number} --seed {params.seed};touch {output};rm {input.folder}_*"
+
+rule underscore:
+    input:
+        link="simulated_{species}",
+        real="simulated_{species}_aligned_reads.fasta"
+    output:
+        temp("{species}_reads1.fasta")
+    shell:
+        "sed -i -e 's/;/_/g' {input.real}>{output};rm {input.link}"
+
+rule convert_header:
+    input:
+        link="{species}_reads1.fasta",
+        real="simulated_{species}_aligned_reads.fasta"
+    output:
+        read="{species}_reads.fasta"
+    conda:
+        'envs/perl.yaml'
+    shell:
+        "script/convert1.pl {input.real}>{output}"

@@ -4,7 +4,8 @@ bin-release/
 [Oo]bj/
 [Bb]in/
 Workflow/mapped_reads
-
+Workflow/plots
+Workflow/stat_tools
 
 # Other files and folders
 .settings/
@@ -18,3 +19,4 @@ Workflow/mapped_reads
 # Project files, i.e. `.project`, `.actionScriptProperties` and `.flexProperties`
 # should NOT be excluded as they contain compiler settings and other important
 # information for Eclipse / Flash Builder.
+Wofkflow2/data/read_vih.fastq
