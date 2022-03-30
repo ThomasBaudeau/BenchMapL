@@ -202,4 +202,3 @@ rule lra:
         getparam
     shell:
         "lra index -ONT -W 8 -F 400 {input.ref};lra align -ONT {input.ref} {input.reads} {params} -p s > {output};rm {input.ref}.gli;rm {input.ref}.mmi"
-
