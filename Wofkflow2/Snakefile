@@ -1,8 +1,11 @@
 configfile: '../config/config2.yaml'
 
+wildcard_constraints:
+    msize="\d+"
+
 rule all:
     input:
-        expand("{species}_reads.fasta",species=['vih'])
+        expand("simulated_{species}_{msize}",species=['vih'],msize=config['size'])
 
 rule analyse_phase:
     input:
@@ -13,7 +16,7 @@ rule analyse_phase:
     output:
         temp("simu_{species}")
     shell:
-        "read_analysis.py genome -i {input.read} -rg {input.ref} -o {output} -t 20;touch {output}"
+        "read_analysis.py genome -i {input.read} -rg {input.ref} -o {output} -t 20 > {output};touch {output}"
 
 rule simu_phase:
     input:
@@ -22,13 +25,15 @@ rule simu_phase:
     conda: 
         "envs/nanosim.yaml"
     output:
-        "simulated_{species}"
+        "simulated_{species}_{msize}"
     params:
-        number='1000',
-        seed= config['seed']
+        number='10000',
+        seed= config['seed'],
+        msize='{msize}'
     shell:
-        "simulator.py genome -rg {input.ref} -c {input.folder} -o {output} -n {params.number} --seed {params.seed};touch {output};rm {input.folder}_*"
+        "simulator.py genome -rg {input.ref} -c {input.folder} -o {output} -n {params.number} -max {params.msize} -t 20 --seed {params.seed};touch {output}"
 
+"""
 rule underscore:
     input:
         link="simulated_{species}",
@@ -48,3 +53,4 @@ rule convert_header:
         'envs/perl.yaml'
     shell:
         "script/convert1.pl {input.real}>{output}"
+"""
