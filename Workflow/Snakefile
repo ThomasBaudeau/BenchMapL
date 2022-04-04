@@ -1,27 +1,36 @@
+
+
 configfile: '../config/config.yaml'
 
 TOOLS= [tool for tool in config['param']]
 
 
-def getparam(wildcards):
-    print(wildcards.param.replace("#",' '))
-    return wildcards.param.replace("#",' ')
+def all_sample_default(wildcards):
+    ret=[]
+    a= expand( "mapped_reads/{tool}_{species}_{length}_{param}.bam",zip,tool=TOOLS,param=[config['param'][tool]['command'][0] for tool in TOOLS ],allow_missing=True)
+    for elem in a:
+        for specie in config['species']:
+            for length in config['length']:
+                b=elem.replace('{species}',specie)
+                b=b.replace('{length}',str(length))
+                ret.append(b)
+    return ret
 
-rule all_default:
-    input:
-        expand( "stat_tools/{tool}_default_{param}.stat.txt",zip,tool=TOOLS,param=[config['param'][tool]['command'][0] for tool in TOOLS ])
+
+
+def getparam(wildcards):
+    return wildcards.param.replace("#",' ')
 
 rule final:
     input :
-        "plots/test1.png",
-        "plots/test2.png"
+       expand( "plots/{species}_{length}_test{num}.png", species=config['species'],length=config['length'],num=['1','2'])
 
 rule plot_test:
     input:
-       expand("mapped_reads/{tool}_default_{param}.bam",zip,tool=TOOLS,param=[config['param'][tool]['command'][0] for tool in TOOLS ])
+       all_sample_default
     output:
-        "plots/test1.png",
-        "plots/test2.png"
+        "plots/{species}_{length}_test1.png",
+        "plots/{species}_{length}_test2.png"
     conda:
         "env/plotscript.yaml"
     script:
@@ -29,30 +38,30 @@ rule plot_test:
         
 rule sam_stat:
     input:
-        "mapped_reads/{tool}_{name}_{param}.bam"
+        "mapped_reads/{tool}_{species}_{length}_{param}.bam"
     output:
-        "stat_tools/{tool}_{name}_{param}.stat.txt"
+        "stat_tools/{tool}_{species}_{length}_{param}.stat.txt"
     shell:
        "/home/bonsai/bin/SamTool/samtools/samtools stats {input} > {output}"
 
 rule sam_bam:
     input:
-        "mapped_reads/{tool}_{name}_{param}.sam"
+        "mapped_reads/{tool}_{species}_{length}_{param}.sam"
     output:
-        "mapped_reads/{tool}_{name}_{param}.bam"
+        "mapped_reads/{tool}_{species}_{length}_{param}.bam"
     shell:
-       "/home/bonsai/bin/SamTool/samtools/samtools sort {input} > {output}"
+       "/home/bonsai/bin/SamTool/samtools/samtools sort {input} > {output};rm {input}"
 
 rule all_minimap2:
     input:
-        expand("mapped_reads/minimap2_{name}_{param}.sam",zip,param=config['param']['minimap2']['command'],name=config['param']['minimap2']['name'])
+        expand("mapped_reads/minimap2_{species}_{length}_{param}.sam", species=config['species'],length=config['length'],param=config['param']['minimap2']['command'])
 
 rule minimap2:
     input:
-        ref=config["ref"],
-        reads= config["dataset"]
+        ref='data/ref_{species}.fasta',
+        reads= 'data/samples/{species}_{length}_reads.fasta'
     output:
-        "mapped_reads/minimap2_{name}_{param}.sam"
+        "mapped_reads/minimap2_{species}_{length}_{param}.sam"
     conda:
         "env/minimap2.yaml"
     params:
@@ -62,14 +71,14 @@ rule minimap2:
 
 rule all_graphmap2:
     input:
-        expand("mapped_reads/graphmap2_{name}_{param}.sam",zip,param=config['param']['graphmap2']['command'],name=config['param']['graphmap2']['name'])
+        expand("mapped_reads/graphmap2_{species}_{length}_{param}.sam",species=config['species'],length=config['length'],param=config['param']['graphmap2']['command'])
 
 rule graphmap2:
     input:
-        ref=config["ref"],
-        reads= config["dataset"]
+        ref= 'data/ref_{species}.fasta',
+        reads= 'data/samples/{species}_{length}_reads.fasta'
     output:
-        "mapped_reads/graphmap2_{name}_{param}.sam"
+        "mapped_reads/graphmap2_{species}_{length}_{param}.sam"
     conda:
         "env/graphmap2.yaml"
     params:
@@ -80,14 +89,14 @@ rule graphmap2:
 
 rule all_graphmap:
     input:
-        expand("mapped_reads/graphmap_{name}_{param}.sam",zip,param=config['param']['graphmap']['command'],name=config['param']['graphmap']['name'])
+        expand("mapped_reads/graphmap_{species}_{length}_{param}.sam",species=config['species'],length=config['length'],param=config['param']['graphmap']['command'])
 
 rule graphmap:
     input:
-        ref=config["ref"],
-        reads= config["dataset"]
+        ref= 'data/ref_{species}.fasta',
+        reads= 'data/samples/{species}_{length}_reads.fasta'
     output:
-        "mapped_reads/graphmap_{name}_{param}.sam"
+        "mapped_reads/graphmap_{species}_{length}_{param}.sam"
     conda:
         "env/graphmap.yaml"
     params:
@@ -98,14 +107,14 @@ rule graphmap:
 
 rule all_mm2f:
     input:
-        expand("mapped_reads/mm2f_{name}_{param}.sam",zip,param=config['param']['mm2f']['command'],name=config['param']['mm2f']['name'])
+        expand("mapped_reads/mm2f_{species}_{length}_{param}.sam",species=config['species'],length=config['length'],param=config['param']['mm2f']['command'])
 
 rule mm2f:
     input:
-        ref=config["ref"],
-        reads= config["dataset"]
+        ref= 'data/ref_{species}.fasta',
+        reads= 'data/samples/{species}_{length}_reads.fasta'
     output:
-        "mapped_reads/mm2f_{name}_{param}.sam"
+        "mapped_reads/mm2f_{species}_{length}_{param}.sam"
     params:
         getparam
     shell:
@@ -113,34 +122,34 @@ rule mm2f:
 
 rule all_blasr:
     input:
-        expand("mapped_reads/blasr_{name}_{param}.sam",zip,param=config['param']['blasr']['command'],name=config['param']['blasr']['name'])
+        expand("mapped_reads/blasr_{species}_{length}_{param}.sam",species=config['species'],length=config['length'],param=config['param']['blasr']['command'])
 
 
 rule blasr:
     input:
-        ref=config["ref"],
-        reads= config["dataset"]
+        ref= 'data/ref_{species}.fasta',
+        reads= 'data/samples/{species}_{length}_reads.fasta'
     output:
-        "mapped_reads/blasr_{name}_{param}.sam"
+        "mapped_reads/blasr_{species}_{length}_{param}.sam"
     conda:
         "env/blasr.yaml"
     params:
         getparam
     shell:
-        "blasr {input.reads} {input.ref} {params} --out {output}> {output};rm data/*.fasta.gmidx"
+        "blasr {input.reads} {input.ref} {params} --out {output}> {output}"
 
 rule all_winnowmap:
     input:
-        expand("mapped_reads/winnowmap_{name}_{param}.sam",zip,param=config['param']['winnowmap']['command'],name=config['param']['winnowmap']['name'])
+        expand("mapped_reads/winnowmap_{species}_{length}_{param}.sam",species=config['species'],length=config['length'],param=config['param']['winnowmap']['command'])
 
 
 rule winnowmap:
     input:
-        ref=config["ref"],
-        reads= config["dataset"],
-        meril=directory('temps')
+        ref= 'data/ref_{species}.fasta',
+        reads= 'data/samples/{species}_{length}_reads.fasta',
+        meril='temps_{species}'
     output:
-        "mapped_reads/winnowmap_{name}_{param}.sam"
+        "mapped_reads/winnowmap_{species}_{length}_{param}.sam"
     conda:
         "env/winnowmap.yaml"
     params:
@@ -150,55 +159,61 @@ rule winnowmap:
 
 rule pre_winnowmap_1:
     input:
-        config["ref"]
+        ref= 'data/ref_{species}.fasta',
     output:
-        temp(directory('temps'))
+        temp(directory('temps_{species}'))
     conda:
         "env/winnowmap.yaml"
     shell:
-       "meryl count memory=16 threads=10 k=19 output {output} {input}"
+       "meryl count memory=16 threads=10 k=19 output {output} {input.ref}"
 
 rule pre_winnowmap_2:
     input:
-        'temps'
+        'temps_{species}'
     output:
         temp('mapped_reads/repetitive_k15_meril.txt')
     conda:
         "env/winnowmap.yaml"
     shell:
-       "meryl print greater-than distinct=0.9998 merylDB> {output}"
+       "meryl print greater-than distinct=0.9998 {input}> {output}"
 
 rule all_magicblast:
     input:
-        expand("mapped_reads/magicblast_{name}_{param}.sam",zip,param=config['param']['magicblast']['command'],name=config['param']['magicblast']['name'])
+        expand("mapped_reads/magicblast_{species}_{length}_{param}.sam",species=config['species'],length=config['length'],param=config['param']['magicblast']['command'])
 
 
 rule magicblast:
     input:
-        ref=config["ref"],
-        reads= config["dataset"]
+        ref= 'data/ref_{species}.fasta',
+        reads= 'data/samples/{species}_{length}_reads.fasta',
     output:
-        "mapped_reads/magicblast_{name}_{param}.sam"
+        "mapped_reads/magicblast_{species}_{length}_{param}.sam"
     conda:
         "env/magicblast.yaml"
     params:
         getparam
     shell:
-        "makeblastdb -in {input.ref} -out tempdb/aname -parse_seqids -dbtype nucl; magicblast -query {params} {input.reads} -db tempdb/aname -out {output};rm tempdb -r"
+        "makeblastdb -in {input.ref} -out blastdb/default -parse_seqids -dbtype nucl; magicblast -query {input.reads} -db blastdb/default {params} -out {output};"
 
 rule all_lra:
     input:
-        expand("mapped_reads/magicblast_{name}_{param}.sam",zip,param=config['param']['lra']['command'],name=config['param']['lra']['name'])
+        expand("mapped_reads/magicblast_{species}_{length}_{param}.sam",species=config['species'],length=config['length'],param=config['param']['lra']['command'])
 
 rule lra:
     input:
-        ref=config["ref"],
-        reads= config["dataset"]
+        ref= 'data/ref_{species}.fasta',
+        reads= 'data/samples/{species}_{length}_reads.fasta',
     output:
-        "mapped_reads/lra_{name}_{param}.sam"
+        "mapped_reads/lra_{species}_{length}_{param}.sam"
     conda:
         "env/lra.yaml"
     params:
         getparam
     shell:
-        "lra index -ONT -W 8 -F 400 {input.ref};lra align -ONT {input.ref} {input.reads} {params} -p s > {output};rm {input.ref}.gli;rm {input.ref}.mmi"
+        "lra index -ONT -W 8 -F 400 {input.ref};lra align -ONT {input.ref} {input.reads} {params} -p s > {output}"
+
+
+# ;rm {input.ref}.gli;rm {input.ref}.mmi
+# ;rm data/*.fasta.gmidx
+#;;rm tempdb -r
+

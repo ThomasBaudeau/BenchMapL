@@ -1,0 +1,10 @@
+Program: lra (long sequence alignment)
+Version: V1.3.2
+Contact: Mark Chaisson (mchaisso@usc.edu) and Jingwen Ren (jingwenr@usc.edu)
+
+Usage:   lra <command> [options]
+
+Command: index   - Build global and local indexes on a genome.
+         align   - Map reads using the index.
+         global  - Build a global index.
+         local   - Build local index.

@@ -1,5 +1,5 @@
-dataset: data/samples/vih_reads.fasta
-ref: data/sequence.fasta
+length: [5000,2500,1000,500,350]
+species: ['vih']
 param:
   minimap2: {
     name: ['default'],
@@ -21,13 +21,7 @@ param:
     command: ['-ax#map-ont']}
   magicblast: {
     name: ['default'],
-    command: ['#']}
+    command: ['-splice#F']}
   lra: {
     name: ['default'],
     command: ['-t#16']}
-  #stampy: {
-  #  name: ['default'],
-  #  command: ['#']}
-  #minimap: {
-  #  name: ['default'],
-  #  command: ['#']}
