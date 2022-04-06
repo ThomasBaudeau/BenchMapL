@@ -38,6 +38,19 @@ def two_sample_all(wildcards):
                     ret.append(b)
     return ret
 
+def all_sample_default(wildcards):
+    ret=[]
+    a= expand( "mapped_reads/{tool}_{species}_{length}_{param}.bam",zip,tool=TOOLS,param=[config['param'][tool]['command'][0] for tool in TOOLS ],allow_missing=True)
+    for elem in a:
+        for specie in config['species']:
+            for length in config['length']:
+                b=elem.replace('{species}',specie)
+                b=b.replace('{length}',str(length))
+                ret.append(b)
+    return ret
+
+
+
 def getparam(wildcards):
     return wildcards.param.replace("#",' ').replace('§','_')
 
