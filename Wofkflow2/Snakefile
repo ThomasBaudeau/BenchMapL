@@ -5,7 +5,7 @@ wildcard_constraints:
 
 rule all:
     input:
-        expand("simulated_{species}_{msize}",species=['vih'],msize=config['size'])
+        expand("{species}_{msize}_reads.fasta",species=['vih'],msize=config['size'])
 
 rule analyse_phase:
     input:
@@ -16,7 +16,7 @@ rule analyse_phase:
     output:
         temp("simu_{species}")
     shell:
-        "read_analysis.py genome -i {input.read} -rg {input.ref} -o {output} -t 20 > {output};touch {output}"
+        "read_analysis.py genome -i {input.read} -rg {input.ref} -o {output} -t 24 > {output};touch {output}"
 
 rule simu_phase:
     input:
@@ -29,28 +29,24 @@ rule simu_phase:
     params:
         number='10000',
         seed= config['seed'],
-        msize='{msize}'
+        tsize='{msize}'
     shell:
-        "simulator.py genome -rg {input.ref} -c {input.folder} -o {output} -n {params.number} -max {params.msize} -t 20 --seed {params.seed};touch {output}"
+        "simulator.py genome -rg {input.ref} -c {input.folder} -o {output} -n {params.number} -max {params.tsize} -t 24 --seed {params.seed};touch {output}"
 
-"""
 rule underscore:
     input:
-        link="simulated_{species}",
-        real="simulated_{species}_aligned_reads.fasta"
+        link="simulated_{species}_{msize}",
     output:
-        temp("{species}_reads1.fasta")
+        temp("{species}_{msize}_reads1.fasta")
     shell:
-        "sed -i -e 's/;/_/g' {input.real}>{output};rm {input.link}"
+        "sed -i -e 's/;/_/g' simulated_{wildcards.species}_{wildcards.msize}_aligned_reads.fasta > {output} ;rm {input.link}"
 
 rule convert_header:
     input:
-        link="{species}_reads1.fasta",
-        real="simulated_{species}_aligned_reads.fasta"
+        link="{species}_{msize}_reads1.fasta",
     output:
-        read="{species}_reads.fasta"
+        read="{species}_{msize}_reads.fasta"
     conda:
         'envs/perl.yaml'
     shell:
-        "script/convert1.pl {input.real}>{output}"
-"""
+        "script/convert1.pl simulated_{wildcards.species}_{wildcards.msize}_aligned_reads.fasta >{output}"

@@ -1,3 +1,4 @@
+from distutils.command.config import config
 import pysam
 import numpy as np
 import matplotlib.pyplot as plt
@@ -17,11 +18,6 @@ class result:
          self.name=name
 
     def corpercent(self,cor):
-        print("\n")
-        print(cor)
-        print(self.mapped)
-        print(self.unmapped)
-        print("\n")
         return (cor/(self.mapped+self.unmapped))*100
 
     def mappercentU(self):
@@ -53,7 +49,6 @@ class result:
 
 
 def parsepath(path):
-    print(path)
     one=(path.index("/"))
     two=(path.index('_',one))
     return path[one+1:two]
@@ -93,18 +88,28 @@ def countdiff(bamFP):
             resu.increm_unmapped()
     return resu
 
-def plot_histoMU(results):
-    width = 0.35       # the width of the bars: can also be len(x) sequence
-    fig, ax = plt.subplots()
-    labels=get_label(results)
-    d1,d2=get_MapOrNot(results)
-    ax.bar(labels, d2, width, label='Mapped_reads')
-    ax.bar(labels, d1, width, label='Unmapped_reads',bottom=d2)
-    ax.set_ylabel('nb_reads')
-    ax.set_title('number of reads by status and tools')
-    ax.legend()
-    print(d1)
-    plt.savefig(snakemake.output[0])
+def find_output(key,name):
+    print(snakemake.output)
+    print(key)
+    for output in snakemake.output:
+        if output.count(key)!=0 and output.count(name)!=0:
+            return output
+    return False
+            
+
+def plot_histoMU(results,key):
+    output=find_output(key,'rl1')
+    if output:
+        width = 0.35       # the width of the bars: can also be len(x) sequence
+        fig, ax = plt.subplots()
+        labels=get_label(results)
+        d1,d2=get_MapOrNot(results)
+        ax.bar(labels, d2, width, label='Mapped_reads')
+        ax.bar(labels, d1, width, label='Unmapped_reads',bottom=d2)
+        ax.set_ylabel('nb_reads')
+        ax.set_title('number of reads by status and tools')
+        ax.legend()
+        plt.savefig(output)
 
 def get_label(results):
     labels=[]
@@ -126,73 +131,90 @@ def get_all_cor(results):
     data_cor10=[]
     data_cor20=[]
     for result in results:
-        data_cor.append(result.cor)
-        data_cor5.append(result.cor_5)
-        data_cor10.append(result.cor_10)
-        data_cor20.append(result.cor_20)
+        data_cor.append(result.corpercent(result.cor))
+        data_cor5.append(result.corpercent(result.cor_5))
+        data_cor10.append(result.corpercent(result.cor_10))
+        data_cor20.append(result.corpercent(result.cor_20))
     return [data_cor,data_cor5,data_cor10,data_cor20]
 
 
-def multiple_cor(results):
+def multiple_cor(results,key):
+    output=find_output(key,'rl2')
+    if output:
+        data = get_all_cor(results)
 
-    data = get_all_cor(results)
+        columns = get_label(results)
+        rows = ['perfect','5pb_errors','10pb_errors','20pb_errors']
 
-    columns = get_label(results)
-    rows = ['perfect','5pb_errors','10pb_errors','20pb_errors']
+        values = np.arange(0, 100, 5)
 
-    values = np.arange(0, 1767, 150)
+        # Get some pastel shades for the colors
+        colors = plt.cm.BuPu(np.linspace(0.15, .65, len(rows)))
+        n_rows = len(data)
 
-    # Get some pastel shades for the colors
-    colors = plt.cm.BuPu(np.linspace(0.15, .65, len(rows)))
-    n_rows = len(data)
+        index = np.arange(len(columns)) + 0.3
+        bar_width = 0.4
 
-    index = np.arange(len(columns)) + 0.3
-    bar_width = 0.4
-
-    # Initialize the vertical-offset for the stacked bar chart.
-    y_offset = np.zeros(len(columns))
-    y=np.zeros(len(columns))
-    # Plot bars and create text labels for the table
-    cell_text = []
-    for row in range(n_rows):
-        plt.bar(index, data[row], bar_width, bottom=y, color=colors[row])
-        y_offset = data[row]
-        y=y+data[row]
-        cell_text.append(['%1i' % (x / 1) for x in y])
-    # Reverse colors and text labels to display the last value at the top.
-
-
-
-    # Add a table at the bottom of the axes
-    the_table = plt.table(cellText=cell_text,
-                        rowLabels=rows,
-                        rowColours=colors,
-                        colLabels=columns,
-                        loc='bottom')
-
-    # Adjust layout to make room for the table:
-    plt.subplots_adjust(left=0.2, bottom=0.2)
-
-    plt.ylabel("nb reads correctly aligned")
-    plt.yticks(values, ['%d' % val for val in values])
-    plt.xticks([])
-    plt.title('proportion of correctly mapped read by tools and error')
-
-    plt.savefig(snakemake.output[1])
+        # Initialize the vertical-offset for the stacked bar chart.
+        y_offset = np.zeros(len(columns))
+        y=np.zeros(len(columns))
+        # Plot bars and create text labels for the table
+        cell_text = []
+        for row in range(n_rows):
+            plt.bar(index, data[row], bar_width, bottom=y, color=colors[row])
+            y_offset = data[row]
+            y=y+data[row]
+            cell_text.append(['%1i' % (x / 1) for x in y])
+        # Reverse colors and text labels to display the last value at the top.
 
 
+
+        # Add a table at the bottom of the axes
+        the_table = plt.table(cellText=cell_text,
+                            rowLabels=rows,
+                            rowColours=colors,
+                            colLabels=columns,
+                            loc='bottom')
+
+        # Adjust layout to make room for the table:
+        plt.subplots_adjust(left=0.2, bottom=0.2)
+
+        plt.ylabel("nb reads correctly aligned")
+        plt.yticks(values, ['%d' % val for val in values])
+        plt.xticks([])
+        plt.title('proportion of correctly mapped read by tools and error')
+
+        plt.savefig(output)
+
+def group_input(files):
+    group={}
+    for specie in snakemake.config["species"]:
+        for length in snakemake.config['length']:
+            for file in files:
+                if  file.count('_'+specie+'_')==1 and file.count('_'+str(length)+'_')==1 :
+                    try:
+                        group[specie+'_'+str(length)+'_'].append(file)
+                    except:
+                        group[specie+'_'+str(length)+'_']=[]
+                        group[specie+'_'+str(length)+'_'].append(file)
+    return group
 
 def do_something(data_path, out_path, myparam):
     files=list(snakemake.input)
-    results=[]
-    for tool in files:
-        bamFP = pysam.AlignmentFile(tool, "rb")
-        name=parsepath(tool)
-        count=0
-        resu=countdiff(bamFP)
-        print(resu)
-        resu.setname(name)
-        results.append(resu)
-    multiple_cor(results)    
-    plot_histoMU(results)   
+    groups=group_input(files)
+    for key in groups.keys(): 
+        lst=groups[key]
+        results=[]
+        for tool in lst:
+            bamFP = pysam.AlignmentFile(tool, "rb")
+            name=parsepath(tool)
+            count=0
+            resu=countdiff(bamFP)
+            resu.setname(name)
+            results.append(resu)
+        multiple_cor(results,key)    
+        plot_histoMU(results,key)
+
 do_something(snakemake.input[0], snakemake.output[0], snakemake.config["param"])
+
+
