@@ -13,6 +13,8 @@ class result:
         self.cor_20=0
         self.mapped=0
         self.unmapped=0
+        self.group1=[]
+        self.group2=[]
 
     def setname(self,name):
          self.name=name
@@ -26,6 +28,11 @@ class result:
     def mappercentM(self):
         return (self.mapped/(self.mapped+self.unmapped))*100
 
+    def addGroup1(self,add):
+        self.group1.append(add)
+
+    def addGroup2(self,add):
+        self.group2.append(add)
 
     def increm_cor(self,num=0):
         if num not in [0,5,10,20]:
@@ -77,6 +84,7 @@ def read_align(resu,read,threshold=0):
         resu.increm_cor(threshold)
         return True
     else:
+        resu.addGroup2(read.query_name)
         return False
 
 def countdiff(bamFP):
