@@ -10,6 +10,8 @@ Workflow/stat_tools
 # Other files and folders
 .settings/
 .snakemake/
+Workflow2/data/read_vih.fastq
+Workflow2/data/supl/human_read.fastq
 # Executables
 *.swf
 *.air
