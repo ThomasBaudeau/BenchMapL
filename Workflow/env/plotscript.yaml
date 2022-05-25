@@ -9,3 +9,4 @@ dependencies:
   - biopython
   - matplotlib
   - pysam=0.18.0
+  - upsetplot

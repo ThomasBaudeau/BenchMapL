@@ -1,27 +1,31 @@
 length: [5000,2500,1000,500,350]
 species: ['vih']
+error_rate: ['0']
 param:
   minimap2: {
-    name: ['default','C1','C2','C3','C4','C5','C6'],
-    command: ['#','-k#12','-k#10','-k#8','-w#10','-w#5','-w#1']}
+    name: ['default','C1','C2','C3*','C4','C5','C6'],
+    command: ['#','-k#12','-k#10','-k#8#-w#1','-w#10','-w#5','-w#1']}
   mm2f: {
-    name: ['default','C1','C2','C3','C4','C5','C6'],
-    command: ['#','-k#12','-k#10','-k#8','-w#10','-w#5','-w#1']}
+    name: ['default','C1','C2','C3*','C4','C5','C6'],
+    command: ['#','-k#12','-k#10','-k#8#-w#1','-w#10','-w#5','-w#1']}
   graphmap2: {
-    name: ['default','B1','B2','B3','B4','B5'],
+    name: ['default','B1','B2*','B3'],
     command: ['#','-a#sg','-a#sggotoh','-a#anchorgotoh']}
   graphmap: {
-    name: ['default','A1','A2','A3','A4','A5','A6'],
+    name: ['default','A1','A2','A3','A4*','A5','A6'],
     command: ['#','-e#5','-e#4,2','-k#8','-k#4','-A#8','-A#16']}
   blasr: {
-    name: ['default','G1','G2','G3','G4','G5','G6','G7','G8','G9','G10'],
+    name: ['default*','G1','G2','G3','G4','G5','G6','G7','G8','G9','G10'],
     command: ['#','--minMatch#10','--minMatch#9','--minMatch#8','--minMatch#7','--minMatch#6','--clipping#hard','--clipping#soft','--nCandidates#15','--nCandidates#20']}
   winnowmap: {
-    name: ['default','D1','D2','D3','D4','D5','D6','D7'],
+    name: ['default*','D1','D2','D3','D4','D5','D6','D7'],
     command: ['#','-k#12','-k#10','-k#8','-w#25','-w#10','-w#5','-w#1']}
   magicblast: {
-    name: ['default','F1','F2','F3','F4','F5','F6'],
+    name: ['default*','F1','F2','F3','F4','F5','F6'],
     command: ['-splice#F','-splice#F#-word§size#15#-limit§lookup#false','-splice#F#-word§size#12#-limit§lookup#false','-splice#F#-gapopen#4#-gapextend#2','-splice#F#-max§db§word§count#60']}
   lra: {
-    name: ['default','H1','H2','H3','H4','H5','H6'],
+    name: ['default','H1','H2*','H3','H4','H5','H6'],
     command: ['#','-W#10#-F#5000','-W#15#-F#5000','-W#10#-F#10000','-W#10#-F#500','-W#15#-F#500','-W#12#-F#3000']}
+  blast: {
+    name: ['default*'],
+    command: ['']}

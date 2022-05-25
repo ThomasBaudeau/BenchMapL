@@ -1,2 +1,5 @@
 seed : 12345
+species: ['vih','covid']
 size : [5000,2500,1000,500,350]
+error_rate : [0.95,0.90]
+number : 60
