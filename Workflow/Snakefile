@@ -67,16 +67,16 @@ def getparam(wildcards):
 
 rule final1:
     input :
-       expand( "plots/default/{species}_{length}_{error_rate}_rl{num}.png", species=config['species'],length=config['length'],num=['1','2','3','4','5'],error_rate=config['error_rate'])
+       expand( "plots/default/{species}_{length}_{error_rate}_rl{num}.pdf", species=config['species'],length=config['length'],num=['1','2','3','4','5'],error_rate=config['error_rate'])
 
 rule final2:
     input :
-       expand( "plots/params/{tool}/{tool}_{species}_{length}_{error_rate}_bc{num}.png",tool=TOOLS, species=config['species'],length=['5000','350'],num=['1','2','3'],error_rate=config['error_rate'])
+       expand( "plots/params/{tool}/{tool}_{species}_{length}_{error_rate}_bc{num}.pdf",tool=TOOLS, species=config['species'],length=['5000','350'],num=['1','2','3'],error_rate=config['error_rate'])
 
 
 rule final3:
     input :
-       expand( "plots/best/{species}_{length}_{error_rate}_rl{num}.png", species=config['species'],length=config['length'],num=['1','2','3','4','5'],error_rate=config['error_rate'])
+       expand( "plots/best/{species}_{length}_{error_rate}_rl{num}.pdf", species=config['species'],length=config['length'],num=['1','2','3','4','5'],error_rate=config['error_rate'])
 
 rule final_stat:
     input :
@@ -86,11 +86,11 @@ rule plot_best_command:
     input:
        all_sample_best
     output:
-        "plots/best/{species}_{length}_{error_rate}_rl1.png",
-        "plots/best/{species}_{length}_{error_rate}_rl2.png",
-        "plots/best/{species}_{length}_{error_rate}_rl3.png",
-        "plots/best/{species}_{length}_{error_rate}_rl4.png",
-        "plots/best/{species}_{length}_{error_rate}_rl5.png"
+        "plots/best/{species}_{length}_{error_rate}_rl1.pdf",
+        "plots/best/{species}_{length}_{error_rate}_rl2.pdf",
+        "plots/best/{species}_{length}_{error_rate}_rl3.pdf",
+        "plots/best/{species}_{length}_{error_rate}_rl4.pdf",
+        "plots/best/{species}_{length}_{error_rate}_rl5.pdf"
     conda:
         "env/plotscript.yaml"
     script:
@@ -101,11 +101,11 @@ rule plot_default_command:
     input:
        all_sample_default
     output:
-        "plots/default/{species}_{length}_{error_rate}_rl1.png",
-        "plots/default/{species}_{length}_{error_rate}_rl2.png",
-        "plots/default/{species}_{length}_{error_rate}_rl3.png",
-        "plots/default/{species}_{length}_{error_rate}_rl4.png",
-        "plots/default/{species}_{length}_{error_rate}_rl5.png"
+        "plots/default/{species}_{length}_{error_rate}_rl1.pdf",
+        "plots/default/{species}_{length}_{error_rate}_rl2.pdf",
+        "plots/default/{species}_{length}_{error_rate}_rl3.pdf",
+        "plots/default/{species}_{length}_{error_rate}_rl4.pdf",
+        "plots/default/{species}_{length}_{error_rate}_rl5.pdf"
     conda:
         "env/plotscript.yaml"
     script:
@@ -115,9 +115,9 @@ rule plot_allstat_command:
     input:
        two_sample_all
     output:
-        "plots/params/{tool}/{tool}_{species}_{length}_{error_rate}_bc1.png",
-        "plots/params/{tool}/{tool}_{species}_{length}_{error_rate}_bc2.png",
-        "plots/params/{tool}/{tool}_{species}_{length}_{error_rate}_bc3.png"
+        "plots/params/{tool}/{tool}_{species}_{length}_{error_rate}_bc1.pdf",
+        "plots/params/{tool}/{tool}_{species}_{length}_{error_rate}_bc2.pdf",
+        "plots/params/{tool}/{tool}_{species}_{length}_{error_rate}_bc3.pdf"
     conda:
         "env/plotscript.yaml"
     script:

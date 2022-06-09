@@ -1,6 +1,6 @@
 length: [5000,2500,1000,500,350]
-species: ['vih']
-error_rate: ['0']
+species: ['vih','covid']
+error_rate: ['0.95','0.9']
 param:
   minimap2: {
     name: ['default','C1','C2','C3*','C4','C5','C6'],
@@ -26,6 +26,3 @@ param:
   lra: {
     name: ['default','H1','H2*','H3','H4','H5','H6'],
     command: ['#','-W#10#-F#5000','-W#15#-F#5000','-W#10#-F#10000','-W#10#-F#500','-W#15#-F#500','-W#12#-F#3000']}
-  blast: {
-    name: ['default*'],
-    command: ['']}

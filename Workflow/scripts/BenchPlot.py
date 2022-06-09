@@ -149,7 +149,8 @@ def get_all_cor(results):
 def plot_histoMU(results,output):
     if output:
         width = 0.45       # the width of the bars: can also be len(x) sequence
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(7, 7))
+        plt.rcParams.update({'font.size': 11})
         labels=get_label(results)
         d1,d2=get_MapOrNot(results)
         ax.set_xticklabels(labels, rotation = 45)
@@ -159,19 +160,20 @@ def plot_histoMU(results,output):
         ax.set_title('Percentage of reads by status and tools')
         ax.legend()
         plt.subplots_adjust(left=0.2, bottom=0.2)
-        plt.savefig(output,dpi=300)
+        plt.savefig(output,dpi=300,format='pdf')
 
 def plot_histoNotHuman(results,output):
     if output:
         width = 0.35       # the width of the bars: can also be len(x) sequence
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(7, 7))
+        plt.rcParams.update({'font.size': 11})
         labels=get_label(results)
         d2=get_nbHuman(results)
         ax.bar(labels, d2, width, label='Human_reads')
         ax.set_ylabel('Percentage of reads')
         ax.set_title('Percentage of non reference\'s reads by tools')
         ax.legend()
-        plt.savefig(output,dpi=300)
+        plt.savefig(output,dpi=300,format='pdf')
 
 def common_error_gp1(results,output):
     if output:
@@ -180,9 +182,9 @@ def common_error_gp1(results,output):
         for read in results:
             gp1[read.name]=read.group1
         plot1=from_contents(gp1)
-        polt = UpSet(plot1,show_counts=True).plot()
+        polt = UpSet(plot1,show_counts=True,element_size=40).plot()
         plt.title('Categories of unmapped reads among tools')
-        plt.savefig(output,dpi=300)
+        plt.savefig(output,dpi=300,format='pdf')
 
 def common_error_gp2(results,output):
 
@@ -193,25 +195,27 @@ def common_error_gp2(results,output):
             for read in results:
                 gp1[read.name]=read.group2
             plot1=from_contents(gp1)
-            polt = UpSet(plot1,show_counts=True).plot()
+            polt = UpSet(plot1,show_counts=True,element_size=80).plot()
             plt.title('Categories of poorly located reads among tools')
             plt.savefig(output)
         except:
             for read in results:
-                plt.savefig(output,dpi=300)
+                plt.savefig(output,dpi=300,format='pdf')
 
 
 def multiple_cor(results,output):
     if output:
         plt.clf()
+        plt.figure(figsize=(11, 8))
+        plt.rcParams.update({'font.size': 11})
         data = get_all_cor(results)
         columns = get_label(results)
         rows = ['perfect','5pb_shift','10pb_shift','20pb_shift']
-        values = np.arange(0, 105, 5)
+        values = np.arange(0, 120, 20)
         colors = plt.cm.BuPu(np.linspace(0.15, .65, len(rows)))
         n_rows = len(data)
-        index = np.arange(len(columns)) + 0.3
-        bar_width = 0.4
+        index = np.arange(len(columns)) +0.2
+        bar_width = 0.5
         y_offset = np.zeros(len(columns))
         y=np.zeros(len(columns))
         cell_text = []
@@ -222,12 +226,17 @@ def multiple_cor(results,output):
             cell_text.append(['%1i' % (x / 1) for x in y])
         the_table = plt.table(cellText=cell_text,
                             rowLabels=rows,
+                            alpha=1,
                             rowColours=colors,
                             colLabels=columns,
                             loc='bottom')
-        plt.subplots_adjust(left=0.2, bottom=0.2)
+        the_table.scale(1, 1)
+        the_table.auto_set_font_size(False)
+        the_table.set_fontsize(11)
+        plt.subplots_adjust(left=0.099, bottom=0.099)
         plt.ylabel("Percentage of reads")
         plt.yticks(values, ['%d' % val for val in values])
         plt.xticks([])
         plt.title('Proportion of correctly mapped read by tools and error')
-        plt.savefig(output,dpi=300)
+        
+        plt.savefig(output,dpi=300,format='pdf')
