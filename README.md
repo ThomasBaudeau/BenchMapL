@@ -84,6 +84,7 @@ The structue of the workflow is build as following:
  ##### Workflow2 : Data Generation Part
 
   1. Add the species file of the reference in fasta format to the directory *data*.
-  2. Rename the file with the following format : __ref__\_*SPECIES-NAME*.fasta
-  2. Open the config2 files and add the 
+  2. Rename the file with the following format : __ref__\_ __species-name__.fasta
+  3. Open the config2 files and add the *species-name* in the species fields.
+  4. Modifies the __size__, __error_rate__ and __number__ fields to change to the desired length, error rate and coverage for each generated read file
 
