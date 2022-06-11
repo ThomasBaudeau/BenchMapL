@@ -29,8 +29,6 @@ Conda : https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.
 
 The structue of the workflow is build as following:
 
-.. code-block:: none
-
     ├── .gitignore
     ├── README.md
     ├── LICENSE.md
