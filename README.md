@@ -21,8 +21,8 @@ cd BenchMapL
 
 **Requirement**
 
-Snakemake workflows : https://snakemake.readthedocs.io/en/stable/getting_started/installation.html <br> 
-Conda : https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html <br> 
+*Snakemake workflows : https://snakemake.readthedocs.io/en/stable/getting_started/installation.html <br> 
+*Conda : https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html <br> 
 
 
 ## How to start with Visugraph :
@@ -82,4 +82,8 @@ The structue of the workflow is build as following:
  #### BenchMapL Usage:
 
  ##### Workflow2 : Data Generation Part
+
+  1. Add the species file of the reference in fasta format to the directory *data*.
+  2. Rename the file with the following format : __ref__\_*SPECIES-NAME*.fasta
+  2. Open the config2 files and add the 
 
