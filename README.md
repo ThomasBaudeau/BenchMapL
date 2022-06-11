@@ -26,7 +26,62 @@ Conda : https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.
 
 
 ## How to start with Visugraph :
-Principal command to use BenchMapL :
-  1. run-default
-  2. run-params
-  3. run-perfect
+
+The structue of the workflow is build as following:
+
+.. code-block:: none
+
+    ├── .gitignore
+    ├── README.md
+    ├── LICENSE.md
+    ├── workflow
+    │   ├── benchmarks
+    |   │   ├── benchresult.txt
+    |   │   └── ...
+    |   ├── data
+    |   |   ├── sample
+    |   |   │   ├── species_length_error-rates.fasta
+    |   |   │   └── ...
+    |   |   └── ref_species.fasta
+    │   ├── envs
+    |   │   ├── tool1.yaml
+    |   │   └── tool2.yaml
+    │   ├── scripts
+    |   │   ├── script1.py
+    |   │   └── script2.R
+    │   ├── helps_tool
+    |   │   ├── tools_helpdoc.txt
+    |   │   └── ...
+    │   ├── plots
+    |   │   ├── plot1.pdf
+    |   │   └── plot2.pdf
+    |   ├── resu
+    |   │   ├── resu.bam
+    |   │   └── ...
+    |   └── Snakefile
+    ├── workflow2
+    |   ├── data
+    |   |   ├── supl
+    |   |   │   ├── model.model
+    |   |   │   └── ...
+    |   |   └── ref_species.fasta
+    │   ├── envs
+    |   │   ├── tool1.yaml
+    |   │   └── tool2.yaml
+    │   ├── scripts
+    |   │   ├── script1.py
+    |   │   └── script2.R
+    │   ├── result
+    |   │   ├── nano
+    |   │   └── pbsim
+    |   └── Snakefile
+    ├── config
+        ├── config.yaml
+        └── config2.yaml
+
+
+
+ #### BenchMapL Usage:
+
+ ##### Workflow2 : Data Generation Part
+
