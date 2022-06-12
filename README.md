@@ -90,6 +90,6 @@ The structue of the workflow is build as following:
   3. Open the config2 files and add the *species-name* in the species fields.
   4. Modifies the __size__, __error_rate__ and __number__ fields to change to the desired length, error rate and coverage for each generated read file
   5. run with :
-    * __all__ for Pbsim2 reads generation stage
-    * __nano__ for Nanosim reads generation stage
+        * __all__ for Pbsim2 reads generation stage
+        * __nano__ for Nanosim reads generation stage
   
