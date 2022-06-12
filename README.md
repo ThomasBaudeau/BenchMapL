@@ -79,13 +79,13 @@ The structue of the workflow is build as following:
 
 The different mappeurs implemented are :
 
-  * Minimap2
-  * Graphmap2
-  * Graphmap
-  * Blasr
-  * Winnowmap2
-  * MagicBlast
-  * lra
+  * [Minimap2](https://github.com/lh3/minimap2}{https://github.com/lh3/minimap2)
+  * [Graphmap2](https://github.com/lbcb-sci/graphmap2)
+  * [Graphmap](https://github.com/isovic/graphmap)
+  * [Blasr](https://github.com/PacificBiosciences/blasr)
+  * [Winnowmap2](https://github.com/marbl/Winnowmap}{https://github.com/marbl/Winnowmap)
+  * [MagicBlast](https://ncbi.github.io/magicblast/}{https://ncbi.github.io/magicblast/)
+  * [lra](https://github.com/ChaissonLab/LRA}{https://github.com/ChaissonLab/LRA)
 
 
  ### BenchMapL Usage:
