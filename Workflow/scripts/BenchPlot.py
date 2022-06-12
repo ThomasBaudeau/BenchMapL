@@ -26,7 +26,7 @@ class result:
         :param name: name of the result
         :type name: str
         """
-         self.name=name
+        self.name=name
 
     def corpercent(self,cor):
         """percent of cor reads
