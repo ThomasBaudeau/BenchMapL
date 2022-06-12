@@ -25,7 +25,7 @@ cd BenchMapL
 *Conda : https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html <br> 
 
 
-## How to start with Visugraph :
+## How to start with BenchMapL :
 
 The structue of the workflow is build as following:
 
@@ -79,12 +79,12 @@ The structue of the workflow is build as following:
 
 
 
- #### BenchMapL Usage:
+ ### BenchMapL Usage:
 
- ##### Workflow2 : Data Generation Part
+ #### Workflow2 : Data Generation Part
 
-  1. Add the species file of the reference in fasta format to the directory *data*.
-  2. Rename the file with the following format : __ref__\_ __species-name__.fasta
+  1. Add the species file of the reference in fasta format to the directory *data*. > a read files of the species must be add to use Nanosim. 
+  2. Rename the file with the following format : __ref__\_ __species-name__.fasta > Nanosim : __read__\_ __species-name__.fasta
   3. Open the config2 files and add the *species-name* in the species fields.
   4. Modifies the __size__, __error_rate__ and __number__ fields to change to the desired length, error rate and coverage for each generated read file
 
