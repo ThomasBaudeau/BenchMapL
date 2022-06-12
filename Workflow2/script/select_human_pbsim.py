@@ -1,6 +1,11 @@
 import random
 import os
 def select_reads():
+    """select reads and add them in a list
+
+    :return: list of reads
+    :rtype:list
+    """
     seq=[]
     random.seed(snakemake.config['seed'])
     files0=open(snakemake.input[0])
@@ -15,6 +20,13 @@ def select_reads():
 
 
 def do_something(data_path, out_path):
+    """main function for snakemale
+
+    :param data_path: snakemake.input
+    :type data_path: string
+    :param out_path: snakemake.output
+    :type out_path: string
+    """
     seq=select_reads()
     print(snakemake.input)
     files1=open(snakemake.input[1],'a')

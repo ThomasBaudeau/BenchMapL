@@ -5,11 +5,25 @@ import matplotlib.pyplot as plt
 from BenchPlot import *
 
 def parsepath(path):
+    """find the name of the tool
+
+    :param path: a path
+    :type path: string
+    :return: the string between the / and _ character
+    :rtype: string
+    """
     one=(path.index("/"))
     two=(path.index('_',one))
     return path[one+1:two]           
 
 def group_input(files):
+    """generate a dict for each group of tools/datasets
+
+    :param files: list of bam file from the different tools/dataset
+    :type files: list[string]
+    :return: dictionnary of the different datasets groups with each files in a list
+    :rtype: dict
+    """
     group={}
     for specie in snakemake.config["species"]:
         for length in snakemake.config['length']:
@@ -24,6 +38,15 @@ def group_input(files):
     return group
 
 def do_something(data_path, out_path, myparam):
+    """main function
+
+    :param data_path: snakemake.input
+    :type data_path: list
+    :param out_path: snakemake.output
+    :type out_path: list
+    :param myparam: config files
+    :type myparam: list
+    """ 
     files=list(snakemake.input)
     groups=group_input(files)
     for key in groups.keys():
