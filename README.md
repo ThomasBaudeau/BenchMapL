@@ -21,8 +21,8 @@ cd BenchMapL
 
 **Requirement**
 
-*Snakemake workflows : https://snakemake.readthedocs.io/en/stable/getting_started/installation.html <br> 
-*Conda : https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html <br> 
+* [Snakemake workflows](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html) <br> 
+* [Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) <br> 
 
 
 ## How to start with BenchMapL :
@@ -116,6 +116,10 @@ The different mappeurs implemented are :
  ### BenchMapL Configuration:
 
 #### Workflow : Adding a new configuration for a tool
-
+1. Open the config files and add a new command name in the __name__ field of the choosen tool. The name can not contains * character
+2. Add the command in the __command__ fields the name and the command position must be the same. 
+> the space character must be replace by "#" and the __\___ by "§" 
 
 #### Workflow : Change the best configuration for a tool
+1. Open the config files and find the "*" character in __name__ field.
+1. Delete "*" character a and add it to the name of the choosen command.
