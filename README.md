@@ -93,4 +93,17 @@ The structue of the workflow is build as following:
         * "__snakemake -R 1 all__"  : for Pbsim2 reads generation stage
         * "__snakemake -R 1 nano__" : for Nanosim reads generation stage
   
- #### Workflow2 : Mappeur Comparaison Parts
+ #### Workflow : Mappeur Comparaison Parts
+
+   1. Add the different datasets generated in the directory *data/sample* and the different reference files in the directory *data*.
+   2. Open the config files and add the *species-name* in the species fields.
+   3. Modifies the __size__ and __error_rate__ fields to change to the corresponding length, error rate and coverage of each generated read file
+   4. run with :
+        * "__snakemake -R 1 run-default__" : for comparing each tools in there default configuration
+        * "__snakemake -R 1 run-params__" : for comparing each tools with multiple configuration
+        * "__snakemake -R 1 run-perfect__"  : for comparing each tools with there best configuration
+
+##### Workflow : Adding a new configuration for a tool
+
+
+##### Workflow : Change the best configuration for a tool
