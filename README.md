@@ -122,4 +122,4 @@ The different mappeurs implemented are :
 
 #### Workflow : Change the best configuration for a tool
 1. Open the config files and find the "*" character in __name__ field.
-1. Delete "*" character a and add it to the name of the choosen command.
+1. Delete "*" character and add it to the name of the choosen command.
