@@ -1,5 +1,5 @@
 
-
+# config file name
 configfile: '../config/config.yaml'
 
 TOOLS= [tool for tool in config['param']]
@@ -65,16 +65,16 @@ def all_sample_best(wildcards):
 def getparam(wildcards):
     return wildcards.param.replace("#",' ').replace('§','_')
 
-rule final1:
+rule run-default:
     input :
        expand( "plots/default/{species}_{length}_{error_rate}_rl{num}.pdf", species=config['species'],length=config['length'],num=['1','2','3','4','5'],error_rate=config['error_rate'])
 
-rule final2:
+rule run-params:
     input :
        expand( "plots/params/{tool}/{tool}_{species}_{length}_{error_rate}_bc{num}.pdf",tool=TOOLS, species=config['species'],length=['5000','350'],num=['1','2','3'],error_rate=config['error_rate'])
 
 
-rule final3:
+rule run-perfect:
     input :
        expand( "plots/best/{species}_{length}_{error_rate}_rl{num}.pdf", species=config['species'],length=config['length'],num=['1','2','3','4','5'],error_rate=config['error_rate'])
 
@@ -122,7 +122,9 @@ rule plot_allstat_command:
         "env/plotscript.yaml"
     script:
         'scripts/plot_params.py'
-        
+
+
+#-------------converst sam-bam-stat rules-------------------------------
 rule sam_stat:
     input:
         "mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.bam"
@@ -138,6 +140,9 @@ rule sam_bam:
         "mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.bam"
     shell:
        "/home/bonsai/bin/SamTool/samtools/samtools sort {input} > {output};rm {input}"
+
+
+#-------------Tools rules-------------------------------
 
 rule all_minimap2:
     input:
