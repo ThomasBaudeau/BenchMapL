@@ -182,7 +182,7 @@ def common_error_gp1(results,output):
         for read in results:
             gp1[read.name]=read.group1
         plot1=from_contents(gp1)
-        polt = UpSet(plot1,show_counts=True,element_size=40).plot()
+        polt = UpSet(plot1,show_counts=True,element_size=21).plot()
         plt.title('Categories of unmapped reads among tools')
         plt.savefig(output,dpi=300,format='pdf')
 
@@ -195,7 +195,8 @@ def common_error_gp2(results,output):
             for read in results:
                 gp1[read.name]=read.group2
             plot1=from_contents(gp1)
-            polt = UpSet(plot1,show_counts=True,element_size=80).plot()
+            polt = UpSet(plot1,show_counts=True,element_size=21).plot()
+            plt.rcParams.update({'font.size': 11})
             plt.title('Categories of poorly located reads among tools')
             plt.savefig(output)
         except:
@@ -206,8 +207,8 @@ def common_error_gp2(results,output):
 def multiple_cor(results,output):
     if output:
         plt.clf()
-        plt.figure(figsize=(11, 8))
-        plt.rcParams.update({'font.size': 11})
+        plt.figure(figsize=(13, 8))
+        plt.rcParams.update({'font.size': 15})
         data = get_all_cor(results)
         columns = get_label(results)
         rows = ['perfect','5pb_shift','10pb_shift','20pb_shift']
@@ -230,13 +231,13 @@ def multiple_cor(results,output):
                             rowColours=colors,
                             colLabels=columns,
                             loc='bottom')
-        the_table.scale(1, 1)
+        the_table.scale(1, 1.8)
         the_table.auto_set_font_size(False)
-        the_table.set_fontsize(11)
-        plt.subplots_adjust(left=0.099, bottom=0.099)
+        the_table.set_fontsize(15)
+        plt.subplots_adjust(left=0.12, bottom=0.19)
         plt.ylabel("Percentage of reads")
         plt.yticks(values, ['%d' % val for val in values])
         plt.xticks([])
         plt.title('Proportion of correctly mapped read by tools and error')
         
-        plt.savefig(output,dpi=300,format='pdf')
+        plt.savefig(output,dpi=900,format='pdf')

@@ -1,6 +1,6 @@
 length: [5000,2500,1000,500,350]
-species: ['vih','covid']
-error_rate: ['0.95','0.9']
+species: ['vih']
+error_rate: ['0']
 param:
   minimap2: {
     name: ['default','C1','C2','C3*','C4','C5','C6'],
