@@ -6,6 +6,8 @@ from upsetplot import from_contents
 from upsetplot import UpSet
 
 class result:
+    """class for keept the different result from a bam
+    """
     def __init__(self):
        
         self.cor=0
@@ -19,27 +21,66 @@ class result:
         self.missaligned=0
 
     def setname(self,name):
-         self.name=name
+        """set name
+
+        :param name: name of the result
+        :type name: str
+        """
+        self.name=name
 
     def corpercent(self,cor):
+        """percent of cor reads
+
+        :param cor: number of cor reads
+        :type cor: int
+        :return: percent of correct reads
+        :rtype: int
+        """
         return 0 if self.mapped==0 else (cor/(self.mapped))*100
 
     def mappercentU(self):
+        """return percent of unmapped reads
+
+        :return: percent of unmapped reads
+        :rtype: int
+        """
         return (self.unmapped/(self.mapped+self.unmapped))*100
 
     def mappercentM(self):
+        """return percent of mapped reads
+
+        :return: percent of mapped reads
+        :rtype: int
+        """
         return (self.mapped/(self.mapped+self.unmapped))*100
 
     def addGroup1(self,add):
+        """add reads in group1 reads (unmapped reads)
+
+        :param add: id of the unmapped reads
+        :type add: str
+        """
         self.group1.append(add)
 
     def addGroup2(self,add):
+        """add reads in group2 reads (misslocalised reads)
+
+        :param add: id of the reads
+        :type add: str
+        """
         self.group2.append(add)
 
     def missalign(self):
+        """increm missaligned
+        """
         self.missaligned+=1
 
     def increm_cor(self,num=0):
+        """increm cor
+
+        :param num: num of the cor, defaults to 0
+        :type num: int, optional
+        """
         if num not in [0,5,10,20]:
             print("Wrong Input")
             raise
@@ -53,17 +94,40 @@ class result:
             self.cor_20+=1
 
     def increm_mapped(self):
+        """increment mapped
+        """
         self.mapped+=1
 
     def increm_unmapped(self):
+        """increm mapped
+        """
         self.unmapped+=1
 
+
 def parsenamesimu(text):
+    """return expected start position end position and number of reads mapped
+
+    :param text: name of the read
+    :type text: str
+    :return: expected start position, expected end postion and number of mapped reads
+    :rtype: tupple
+    """
     st_pos= int(text.split('_')[1])
     end_pos=int(text.split('_')[6])
     return st_pos,end_pos,(st_pos+end_pos)
 
 def read_align(resu,read,threshold=0):
+    """increm resu cor for a read
+
+    :param resu: class resu
+    :type resu: resu
+    :param read: read object from pybam
+    :type read: pybam object
+    :param threshold: specified cor number, defaults to 0
+    :type threshold: int, optional
+    :return: result of the operation true if read is increm else false
+    :rtype: boolean
+    """
     st_ref,mbase_ref,end_ref=parsenamesimu(read.query_name)
     st_alg=read.reference_start
     end_alg=read.reference_end
@@ -77,6 +141,13 @@ def read_align(resu,read,threshold=0):
         return False
 
 def countdiff(bamFP):
+    """fill the different result for the input bam
+
+    :param bamFP: bam file in pybam format
+    :type bamFP: pybam object
+    :return: the resu object 
+    :rtype: resu
+    """
     resu=result()
     for read in bamFP:
         if is_human(read,resu):
@@ -98,6 +169,17 @@ def countdiff(bamFP):
 
 
 def find_output(key,name=False,outpath=None):
+    """find the output for each groups
+
+    :param key: name of the group
+    :type key: str
+    :param name: name of the selected output, defaults to False
+    :type name: bool or str, optional
+    :param outpath: list of all the possible output name, defaults to None
+    :type outpath: list, optional
+    :return: True if outpout is correct else false
+    :rtype: boolean
+    """
     for output in outpath:
         if name:
             if output.count(key)!=0 and output.count(name)!=0:
@@ -108,12 +190,28 @@ def find_output(key,name=False,outpath=None):
     return False
 
 def get_label(results):
+    """extracts name of all the resu object of the groups
+
+    :param results: list of resu object
+    :type results: list
+    :return: list of name
+    :rtype: list
+    """
     labels=[]
     for result in results:
         labels.append(result.name)
     return labels
 
 def is_human(read,resu):
+    """tell if read is an human reads and increm missaligned
+
+    :param read: pybam object
+    :type read: pybam object
+    :param resu: resu object
+    :type resu: resu object
+    :return: False if missaligned else True
+    :rtype: boolean 
+    """
     if read.query_name.split('_')[2]=='human':
         if not read.is_unmapped:
             resu.missalign()
@@ -121,12 +219,26 @@ def is_human(read,resu):
     return True
 
 def get_nbHuman(results):
+    """return number of missaligned reads for each result of a groups
+
+    :param results: list of resu object
+    :type results: list
+    :return: list of the number of missaligned reads for each resu
+    :rtype: list
+    """
     nb=[]
     for result in results:  
         nb.append(result.missaligned)
     return nb
 
 def get_MapOrNot(results):
+    """return number of mapped and unmapped reads for each result of a groups
+
+    :param results: list of resu object
+    :type results: list
+    :return: lists of the number of mapped and unmapped reads for each resu
+    :rtype: list
+    """
     data_unmap=[]
     data_map=[]
     for result in results:
@@ -135,6 +247,13 @@ def get_MapOrNot(results):
     return data_unmap,data_map
 
 def get_all_cor(results):
+    """return list of list of each cor for each result of a groups
+
+    :param results: list of resu object
+    :type results: list
+    :return: list of list of each cor 
+    :rtype: list
+    """
     data_cor=[]
     data_cor5=[]
     data_cor10=[]
@@ -147,6 +266,13 @@ def get_all_cor(results):
     return [data_cor,data_cor5,data_cor10,data_cor20]
 
 def plot_histoMU(results,output):
+    """plot histogram of unmapped /mapped reads 
+
+    :param results: list of each resu of the groups
+    :type results: list
+    :param output: name of the output
+    :type output: str
+    """
     if output:
         width = 0.45       # the width of the bars: can also be len(x) sequence
         fig, ax = plt.subplots(figsize=(7, 7))
@@ -163,6 +289,13 @@ def plot_histoMU(results,output):
         plt.savefig(output,dpi=300,format='pdf')
 
 def plot_histoNotHuman(results,output):
+    """plot histogram of the number of human reads mapped 
+
+    :param results: list of each resu of the groups
+    :type results: list
+    :param output: name of the output
+    :type output: str
+    """
     if output:
         width = 0.35       # the width of the bars: can also be len(x) sequence
         fig, ax = plt.subplots(figsize=(7, 7))
@@ -176,6 +309,13 @@ def plot_histoNotHuman(results,output):
         plt.savefig(output,dpi=300,format='pdf')
 
 def common_error_gp1(results,output):
+    """plot upsetplot of unmapped reads groups 
+
+    :param results: list of each resu of the groups
+    :type results: list
+    :param output: name of the output
+    :type output: str
+    """
     if output:
         plt.clf()
         gp1={}
@@ -187,7 +327,13 @@ def common_error_gp1(results,output):
         plt.savefig(output,dpi=300,format='pdf')
 
 def common_error_gp2(results,output):
+    """plot upsetplot of poorly located reads groups 
 
+    :param results: list of each resu of the groups
+    :type results: list
+    :param output: name of the output
+    :type output: str
+    """
     if output:
         plt.clf()
         gp1={}
@@ -205,6 +351,13 @@ def common_error_gp2(results,output):
 
 
 def multiple_cor(results,output):
+    """plot of the number of reads correctly localised by categories 
+
+    :param results: list of each resu of the groups
+    :type results: list
+    :param output: name of the output
+    :type output: str
+    """
     if output:
         plt.clf()
         plt.figure(figsize=(13, 8))

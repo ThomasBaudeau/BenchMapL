@@ -18,7 +18,7 @@ rule nano:
     input:
         expand("result/nano/{species}_{msize}_0_reads.fasta",species=['vih'],msize=config['size'])
     
-
+#----------rule for pbsim-----------------
 rule simu_phase:
     input:
         ref="data/ref_{species}.fasta",
@@ -79,7 +79,8 @@ rule convert_header:
         'envs/perl.yaml'
     shell:
         "script/convert1.pl {input.read} >{output}"
-
+        
+#----------rule for nanosim-----------------
 rule analyse_phase:
     input:
         ref="data/ref_{species}.fasta",
