@@ -21,3 +21,4 @@ Workflow2/data/supl/human_read.fastq
 # should NOT be excluded as they contain compiler settings and other important
 # information for Eclipse / Flash Builder.
 Wofkflow2/data/read_vih.fastq
+
