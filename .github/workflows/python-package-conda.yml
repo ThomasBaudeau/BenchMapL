@@ -1,6 +1,15 @@
 name: Python Package using Conda
-
-on: [push]
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - 'README.md'
+      - 'requirements.txt'
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - 'README.md'
+      - 'requirements.txt'
 
 jobs:
   build-linux:
@@ -20,7 +29,7 @@ jobs:
         echo $CONDA/bin >> $GITHUB_PATH
     - name: Install dependencies
       run: |
-        conda env update --file environment.yml --name base
+        conda env update --file Workflow/env/plotscript.yaml --name base
     - name: Lint with flake8
       run: |
         conda install flake8
