@@ -30,7 +30,7 @@ jobs:
     - name: Install dependencies
       run: |
         cd Workflow/env/
-        conda env update --file plotscript.yaml --name base --verbose
+        conda env export --no-builds --file plotscript.yaml --name gitbase --verbose
     - name: Lint with flake8
       run: |
         conda install flake8
