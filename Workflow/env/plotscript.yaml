@@ -10,3 +10,5 @@ dependencies:
   - matplotlib
   - pysam=0.18.0
   - upsetplot
+
+report_errors: True  
