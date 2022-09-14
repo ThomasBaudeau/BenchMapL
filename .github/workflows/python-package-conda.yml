@@ -29,8 +29,8 @@ jobs:
         echo $CONDA/bin >> $GITHUB_PATH
     - name: Install dependencies
       run: |
-        ls
-        conda env update --file Workflow/env/plotscript.yaml --name base --verbose
+        cd Workflow/env/
+        conda env update --file plotscript.yaml --name base --verbose
     - name: Lint with flake8
       run: |
         conda install flake8
