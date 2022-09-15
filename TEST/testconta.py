@@ -123,7 +123,7 @@ def test3():
     for file in apath:
         os.remove(file)
     for file in outpath:
-        pass
+        os.remove(file)
 
 test1()
 test2()
