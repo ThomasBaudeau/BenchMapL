@@ -82,7 +82,6 @@ class result:
         :type num: int, optional
         """
         if num not in [0,5,10,20]:
-            print("Wrong Input")
             raise
         elif num==0:
             self.cor+=1
@@ -379,10 +378,10 @@ def multiple_cor(results,output):
             y=y+data[row]
             cell_text.append(['%1i' % (x / 1) for x in y])
         the_table = plt.table(cellText=cell_text,
-                            rowLabels=rows,
-                            alpha=1,
-                            rowColours=colors,
-                            colLabels=columns,
+                            rowLabels=rows, 
+                            alpha=1, 
+                            rowColours=colors, 
+                            colLabels=columns, 
                             loc='bottom')
         the_table.scale(1, 1.8)
         the_table.auto_set_font_size(False)
@@ -394,3 +393,145 @@ def multiple_cor(results,output):
         plt.title('Proportion of correctly mapped read by tools and error')
         
         plt.savefig(output,dpi=900,format='pdf')
+
+def rsnake(myparam,arg1,arg2=False,arg3=False,arg4=None):
+    if arg4!=None:
+        return myparam[arg1][arg2][arg3][arg4]
+    elif arg2:
+        return myparam[arg1][arg2][arg3]
+    else:
+        return myparam[arg1]
+
+
+def parsepath(path,myparam):
+    """check the command and the tools
+
+    :param path: a path
+    :type path: string
+    :return: the string name of the command
+    :rtype: string
+    """
+    asplit=path.split('_')
+    command=asplit[5][:-4]
+    tool=asplit[1][6:]
+    for pos in range(len(rsnake(myparam,'param',tool,'command'))):
+        if rsnake(myparam,'param',tool,'command',pos)==command:  
+            return rsnake(myparam,'param',tool,'name',pos)
+    raise ValueError("Wrong Input")
+           
+
+def group_input_param(files,myparam):
+    """generate a dict for each group of tools/datasets/command
+
+    :param files: list of bam file from the different tools/dataset
+    :type files: list[string]
+    :return: dictionnary of the different datasets groups with each files in a list
+    :rtype: dict
+    """
+    group={}
+    for specie in rsnake(myparam,"species"):
+        for length in rsnake(myparam,'length'):
+             for er in rsnake(myparam,'error_rate'):
+                for t in rsnake(myparam,'param'):
+                    for file in files:
+                        if  file.count('_'+specie+'_')==1 and file.count('_'+str(length)+'_')==1  and file.count('_'+str(er)+'_')==1 and file.count(t+'_')==1:
+                            try:
+                                group[t+'_'+specie+'_'+str(length)+'_'+str(er)+'_'].append(file)
+                            except:
+                                group[t+'_'+specie+'_'+str(length)+'_'+str(er)+'_']=[]
+                                group[t+'_'+specie+'_'+str(length)+'_'+str(er)+'_'].append(file)
+    return group
+
+def plot_params(data_path, out_path, myparam):
+    """main function
+
+    :param data_path: snakemake.input
+    :type data_path: list
+    :param out_path: snakemake.output
+    :type out_path: list
+    :param myparam: config files
+    :type myparam: list
+    """
+    files=list(data_path)
+    groups=group_input_param(files,myparam)
+    for key in groups.keys():
+        if find_output(key,outpath=out_path): 
+            lst=groups[key]
+            results=[]
+            for tool in lst:
+                save = pysam.set_verbosity(0)
+                bamFP = pysam.AlignmentFile(tool, "rb")
+                pysam.set_verbosity(save)
+                name=parsepath(tool,myparam)
+                resu=countdiff(bamFP)
+                resu.setname(name)
+                results.append(resu)
+            multiple_cor(results,find_output(key,'bc2', out_path))    
+            plot_histoMU(results,find_output(key,'bc1', out_path))
+            common_error_gp2(results,find_output(key,'bc3', out_path))
+
+def findname(path):
+    """find the name of the tool
+
+    :param path: a path
+    :type path: string
+    :return: the string between the / and _ character
+    :rtype: string
+    """
+    one=(path.index("/"))
+    two=(path.index('_',one))
+    return path[one+1:two]           
+
+def group_input_simple(files,myparam):
+    """generate a dict for each group of tools/datasets
+
+    :param files: list of bam file from the different tools/dataset
+    :type files: list[string]
+    :return: dictionnary of the different datasets groups with each files in a list
+    :rtype: dict
+    """
+    group={}
+    for specie in rsnake(myparam,"species"):
+        for length in rsnake(myparam,'length'):
+            for er in rsnake(myparam,'error_rate'):
+                for file in files:
+                    if  file.count('_'+specie+'_')==1 and file.count('_'+str(length)+'_')==1  and file.count('_'+str(er)+'_')==1:
+                        try:
+                            group[specie+'_'+str(length)+'_'+str(er)+'_'].append(file)
+                        except:
+                            group[specie+'_'+str(length)+'_'+str(er)+'_']=[]
+                            group[specie+'_'+str(length)+'_'+str(er)+'_'].append(file)
+    return group
+
+def plot_simple(data_path, out_path, myparam,test=False):
+    """main function
+
+    :param data_path: snakemake.input
+    :type data_path: list
+    :param out_path: snakemake.output
+    :type out_path: list
+    :param myparam: config files
+    :type myparam: list
+    """ 
+    files=list(data_path)
+    groups=group_input_simple(files,myparam)
+    for key in groups.keys():
+        if find_output(key,outpath=out_path): 
+            lst=groups[key]
+            results=[]
+            for tool in lst:
+                save = pysam.set_verbosity(0)
+                bamFP = pysam.AlignmentFile(tool, "rb")
+                pysam.set_verbosity(save)
+                name=findname(tool)
+                resu=countdiff(bamFP)
+                resu.setname(name)
+                results.append(resu)
+            common_error_gp1(results,find_output(key,'rl4', out_path))
+            common_error_gp2(results,find_output(key,'rl5', out_path))
+            multiple_cor(results,find_output(key,'rl2', out_path))    
+            plot_histoMU(results,find_output(key,'rl1', out_path))
+            plot_histoNotHuman(results,find_output(key,'rl3', out_path))
+            if test:
+                return results
+

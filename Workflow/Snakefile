@@ -65,16 +65,16 @@ def all_sample_best(wildcards):
 def getparam(wildcards):
     return wildcards.param.replace("#",' ').replace('§','_')
 
-rule run-default:
+rule run_default:
     input :
        expand( "plots/default/{species}_{length}_{error_rate}_rl{num}.pdf", species=config['species'],length=config['length'],num=['1','2','3','4','5'],error_rate=config['error_rate'])
 
-rule run-params:
+rule run_params:
     input :
        expand( "plots/params/{tool}/{tool}_{species}_{length}_{error_rate}_bc{num}.pdf",tool=TOOLS, species=config['species'],length=['5000','350'],num=['1','2','3'],error_rate=config['error_rate'])
 
 
-rule run-perfect:
+rule run_best:
     input :
        expand( "plots/best/{species}_{length}_{error_rate}_rl{num}.pdf", species=config['species'],length=config['length'],num=['1','2','3','4','5'],error_rate=config['error_rate'])
 
@@ -130,16 +130,20 @@ rule sam_stat:
         "mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.bam"
     output:
         "stat_tools/{tool}_{species}_{length}_{error_rate}_{param}.stat.txt"
+    conda:
+        "env/samtool.yaml"
     shell:
-       "/home/bonsai/bin/SamTool/samtools/samtools stats {input} > {output}"
+       "samtools stats {input} > {output}"
 
 rule sam_bam:
     input:
         "mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.sam"
     output:
         "mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.bam"
+    conda:
+        "env/samtool.yaml"
     shell:
-       "/home/bonsai/bin/SamTool/samtools/samtools sort {input} > {output};rm {input}"
+       "samtools sort {input} > {output};rm {input}"
 
 
 #-------------Tools rules-------------------------------
@@ -203,22 +207,22 @@ rule graphmap:
         "graphmap align -x sensitive -r {input.ref} -d {input.reads} {params} > {output}"
 
 
-rule all_mm2f:
-    input:
-        expand("mapped_reads/mm2f_{species}_{length}_{error_rate}_{param}.sam",species=config['species'],length=config['length'],param=config['param']['mm2f']['command'],error_rate=config['error_rate'])
+#rule all_mm2f:
+   # input:
+     #   expand("mapped_reads/mm2f_{species}_{length}_{error_rate}_{param}.sam",species=config['species'],length=config['length'],param=config['param']['mm2f']['command'],error_rate=config['error_rate'])
 
-rule mm2f:
-    input:
-        ref= 'data/ref_{species}.fasta',
-        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fasta'
-    output:
-        "mapped_reads/mm2f_{species}_{length}_{error_rate}_{param}.sam"
-    params:
-        getparam
-    benchmark:
-        "benchmarks/mm2f_{species}_{length}_{error_rate}_{param}.benchmark.txt"
-    shell:
-        "~/bin/mm2-fast/mm2-fast/minimap2 -ax map-ont {input.ref} {input.reads} > {output}"
+# rule mm2f:
+#     input:
+#         ref= 'data/ref_{species}.fasta',
+#         reads= 'data/samples/{species}_{length}_{error_rate}_reads.fasta'
+#     output:
+#         "mapped_reads/mm2f_{species}_{length}_{error_rate}_{param}.sam"
+#     params:
+#         getparam
+#     benchmark:
+#         "benchmarks/mm2f_{species}_{length}_{error_rate}_{param}.benchmark.txt"
+#     shell:
+#         "~/bin/mm2-fast/mm2-fast/minimap2 -ax map-ont {input.ref} {input.reads} > {output}"
 
 rule all_blasr:
     input:
@@ -269,7 +273,7 @@ rule pre_winnowmap_1:
     conda:
         "env/winnowmap.yaml"
     shell:
-       "meryl count memory=16 threads=10 k=19 output {output} {input.ref}"
+       "meryl count memory=4 threads=2 k=19 output {output} {input.ref}"
 
 rule pre_winnowmap_2:
     input:
@@ -317,7 +321,7 @@ rule lra:
     benchmark:
         "benchmarks/lra_{species}_{length}_{error_rate}_{param}.benchmark.txt"
     shell:
-        "lra index -ONT {params} {input.ref};lra align -ONT -t 16 -a {input.ref} {input.reads}  -p s > {output};rm {input.ref}.gli;rm {input.ref}.mmi"
+        "lra index -ONT {params} {input.ref};lra align -ONT -t 4 -a {input.ref} {input.reads}  -p s > {output};rm {input.ref}.gli;rm {input.ref}.mmi"
 
 onsuccess:
     shell('if ls data/*.fasta.gmidx 2>/dev/null 1>&2;then rm data/*.fasta.gmidx ;fi;if [[ -d blastdb ]]; then rm blastdb -r ;fi')
