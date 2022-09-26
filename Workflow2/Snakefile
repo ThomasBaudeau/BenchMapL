@@ -12,11 +12,11 @@ ruleorder: add_human > convert_header
 
 rule all:
     input:
-        expand("result/pbsim2/{species}_{msize}_{error_rate}_reads.fasta",species=config['species'],msize=config['size'],error_rate=config['error_rate'])
+        expand("result/pbsim2/pbsim2_{species}_{msize}_{error_rate}_reads.fasta",species=config['species'],msize=config['size'],error_rate=config['error_rate'])
 
 rule nano:
     input:
-        expand("result/nano/{species}_{msize}_0_reads.fasta",species=['vih'],msize=config['size'])
+        expand("result/nano/nano_{species}_{msize}_0_reads.fasta",species=['vih'],msize=config['size'])
     
 #----------rule for pbsim-----------------
 rule simu_phase:

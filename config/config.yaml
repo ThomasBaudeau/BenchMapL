@@ -17,12 +17,21 @@ param:
   blasr: {
     name: ['default*','G1','G2','G3','G4','G5','G6','G7','G8','G9','G10'],
     command: ['#','--minMatch#10','--minMatch#9','--minMatch#8','--minMatch#7','--minMatch#6','--clipping#hard','--clipping#soft','--nCandidates#15','--nCandidates#20']}
-  winnowmap: {
+  winnowmap2: {
     name: ['default*','D1','D2','D3','D4','D5','D6','D7'],
     command: ['#','-k#12','-k#10','-k#8','-w#25','-w#10','-w#5','-w#1']}
   magicblast: {
     name: ['default*','F1','F2','F3','F4','F5','F6'],
     command: ['-splice#F','-splice#F#-word§size#15#-limit§lookup#false','-splice#F#-word§size#12#-limit§lookup#false','-splice#F#-gapopen#4#-gapextend#2','-splice#F#-max§db§word§count#60']}
   lra: {
-    name: ['default','H1','H2*','H3','H4','H5','H6'],
+    name: ['default','E1','E2*','E3','E4','E5','E6'],
     command: ['#','-W#10#-F#5000','-W#15#-F#5000','-W#10#-F#10000','-W#10#-F#500','-W#15#-F#500','-W#12#-F#3000']}
+  minimapos: {
+    name: ['default*','H1','H2','H3','H4','H5','H6'],
+    command: ['--syncs#11#--synct#3','-W#10#-F#5000','-W#15#-F#5000','-W#10#-F#10000','-W#10#-F#500','-W#15#-F#500','-W#12#-F#3000']}
+  syncminimap: {
+    name: ['default*','I1','I2','I3','I4','I5','I6'],
+    command: ['-k#15#-w#50#--downsample#1.23#--s-mer#5#--pos1#0#--pos2#10','-k#15#-w#0#--downsample#1.23#--s-mer#5#--pos1#0#--pos2#10','-W#15#-F#5000','-W#10#-F#10000','-W#10#-F#500','-W#15#-F#500','-W#12#-F#3000']}
+  blend: {
+    name: ['default*','J1','J2','J3','J4','J5','J6'],
+    command: ['#','-k7 -w10 --fixed-bits=32 --neighbors=11','-W#15#-F#5000','-W#10#-F#10000','-W#10#-F#500','-W#15#-F#500','-W#12#-F#3000']}

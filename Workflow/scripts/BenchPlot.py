@@ -1,9 +1,10 @@
 import re
+from upsetplot import from_contents
+from upsetplot import UpSet
 import matplotlib.pyplot as plt
 import pysam
 import numpy as np
-from upsetplot import from_contents
-from upsetplot import UpSet
+
 
 class result:
     """class for keept the different result from a bam
