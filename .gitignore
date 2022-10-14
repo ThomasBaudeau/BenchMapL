@@ -5,6 +5,7 @@ bin-release/
 [Bb]in/
 Workflow/mapped_reads
 Workflow/stat_tools
+Workflow/plots
 
 # Other files and folders
 .settings/
