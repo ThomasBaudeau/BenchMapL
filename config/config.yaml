@@ -1,6 +1,6 @@
 length: [5000,2500,1000,500,350]
-species: ['vih']
-error_rate: ['0']
+species: ['vih','covid']
+error_rate: ['0.9','0.95']
 param:
   minimap2: {
     name: ['default','C1','C2','C3*','C4','C5','C6'],
@@ -19,7 +19,7 @@ param:
     command: ['#','--minMatch#10','--minMatch#9','--minMatch#8','--minMatch#7','--minMatch#6','--clipping#hard','--clipping#soft','--nCandidates#15','--nCandidates#20']}
   winnowmap2: {
     name: ['default*','D1','D2','D3','D4','D5','D6','D7'],
-    command: ['#','-k#12','-k#10','-k#8','-w#25','-w#10','-w#5','-w#1']}
+    command: ['-k#10','-k#12','-k#10','-k#8','-w#25','-w#10','-w#5','-w#1']}
   magicblast: {
     name: ['default*','F1','F2','F3','F4','F5','F6'],
     command: ['-splice#F','-splice#F#-word§size#15#-limit§lookup#false','-splice#F#-word§size#12#-limit§lookup#false','-splice#F#-gapopen#4#-gapextend#2','-splice#F#-max§db§word§count#60']}

@@ -105,7 +105,8 @@ rule plot_best_command:
 
 rule plot_default_command:
     input:
-       all_sample_default
+       all_sample_default,
+       'calcreads.txt'
     output:
         "plots/default/{species}_{length}_{error_rate}_rl1.pdf",
         "plots/default/{species}_{length}_{error_rate}_rl2.pdf",
@@ -149,9 +150,15 @@ rule sam_bam:
     conda:
         "env/samtool.yaml"
     shell:
-       "samtools sort {input} > {output};rm {input}"
+       "samtools sort {input} > {output};rm {input};samtools index {output}"
 
-
+rule calcnbreads:
+    input:
+        expand("data/samples/{species}_{length}_{error_rate}_reads.fasta", species=config['species'],length=config['length'],error_rate=config['error_rate'])
+    output:
+        'calcreads.txt'
+    shell:
+        "grep -c '>' {input} >> {output}"
 #-------------Tools rules-------------------------------
 
 rule all_minimap2:
@@ -259,7 +266,7 @@ rule winnowmap:
     input:
         ref= 'data/ref_{species}.fasta',
         reads= 'data/samples/{species}_{length}_{error_rate}_reads.fasta',
-        meril='meril_{species}.txt',
+        meril='repetitive{species}_k10.txt',
     output:
         "mapped_reads/winnowmap2_{species}_{length}_{error_rate}_{param}.sam"
     conda:
@@ -269,17 +276,17 @@ rule winnowmap:
     benchmark:
         "benchmarks/winnowmap2_{species}_{length}_{error_rate}_{param}.benchmark.txt"
     shell:
-        "winnowmap -W {input.meril} -ax map-ont {input.ref} {input.reads} > {output}"
+        "winnowmap {params} -W {input.meril} -ax map-ont {input.ref} {input.reads} > {output}"
 
 rule pre_winnowmap_1:
     input:
         ref= 'data/ref_{species}.fasta',
     output:
-       'meril_{species}.txt'
+       'repetitive{species}_k10.txt'
     conda:
         "env/winnowmap.yaml"
     shell:
-       """meryl count memory=4 threads=2 k=19 output DB1 {input.ref};
+       """meryl count memory=4 threads=2 k=10 output DB1 {input.ref};
         meryl print greater-than distinct=0.9998 DB1 > {output};
         rm -r DB1"""
 
