@@ -1,8 +1,10 @@
 seed : 12345
-species: ['vih','covid']
-size : [5000,2500,1000,500,350]
-error_rate : [0.90,0.95]
-number : 60
+species: ['vih']
+size : [500,350]
+error_rate : [0.90]
+number : 20
 variant: { 
   number: 1,
-  specify: [[50,{'i':['0r'],'d':['0r'],'s':['1r']}]]
+  specify: [],
+  taux: [50]}
+#{'i':['0r'],'d':['0r'],'s':['1r']}

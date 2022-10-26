@@ -28,11 +28,10 @@ def do_something(data_path, out_path):
     :type out_path: string
     """
     seq=select_reads()
-    print(snakemake.input)
     files1=open(snakemake.input[1],'a')
     for i in range(len(seq)):
         files1.write('\n>ERR3278963_-1000_human_-1_R_-1_-1_-1'+str(i))
-        files1.write('\n'+seq[i][0:int(snakemake.input[1].split('_')[2])])
+        files1.write('\n'+seq[i][0:int(snakemake.input[1].split('_')[3])])
     files1.close()
     files2=open(snakemake.output[0],'a')
     files2.close()
