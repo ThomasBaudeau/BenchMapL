@@ -86,12 +86,24 @@ rule convert_phase:
     script:
         'script/convert_name.py'
 
+rule build_perfect:
+    input:
+        data='result/pbsim2/simulated_{species}_{variant}_{msize}_{error_rate}',
+        todel='result/pbsim2/simu_{species}_{variant}_{msize}_{error_rate}'
+    output:
+        'perfect_sam/{species}_{variant}_{msize}_{error_rate}.sam'
+    conda:
+        'envs/last.yaml'
+    shell:
+        'maf-convert -n sam {input.todel}_0001.maf > {output}'
+
 
 rule add_human:
     input:
         human='data/supl/human_read.fastq',
         data='result/pbsim2/simulated_{species}_{variant}_{msize}_{error_rate}',
-        todel='result/pbsim2/simu_{species}_{variant}_{msize}_{error_rate}'
+        todel='result/pbsim2/simu_{species}_{variant}_{msize}_{error_rate}',
+        samperfert='perfect_sam/{species}_{variant}_{msize}_{error_rate}.sam'
     output:
         temp("result/pbsim2/done_{species}_{variant}_{msize}_{error_rate}_human")
     conda:

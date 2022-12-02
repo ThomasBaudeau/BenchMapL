@@ -68,6 +68,23 @@ def all_sample_best(wildcards):
                                 ret.append(b)
     return ret
 
+def all_sample_best_medaka(wildcards):
+    ret=[]
+    a= expand( "medaka/{tool}_{species}_{length}_{error_rate}_{param}.vcf",zip,tool=TOOLS,allow_missing=True)
+    for elem in a:
+        for specie in config['species']:
+            for length in config['length']:
+                for er in config['error_rate']:
+                    for i in range(len(config['param'][elem[7:elem.find('_',7)]]['command'])):
+                            if '*' in config['param'][elem[7:elem.find('_',7)]]['name'][i]:
+                                b=elem.replace('{species}',specie)
+                                b=b.replace('{error_rate}',er)
+                                b=b.replace('{length}',str(length))
+                                b=b.replace('{param}',config['param'][elem[7:elem.find('_',7)]]['command'][i])
+                                ret.append(b)
+    print(ret)
+    return ret
+
 def getparam(wildcards):
     return wildcards.param.replace("#",' ').replace('§','_')
 
@@ -79,6 +96,9 @@ rule run_params:
     input :
        expand( "plots/params/{tool}/{tool}_{species}_{length}_{error_rate}_bc{num}.pdf",tool=TOOLS, species=config['species'],length=['5000','350'],num=['1','2','3'],error_rate=config['error_rate'])
 
+rule call_variants:
+    input:
+        all_sample_best_medaka
 
 rule run_best:
     input :
@@ -102,6 +122,30 @@ rule plot_best_command:
     script:
         'scripts/plot_default.py'
 
+rule medaka_concensus:
+    input:
+        model='data/model/r103_min_high_g360_model.hdf5',
+        ref='data/ref_{species}.fasta',
+        read="mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.bam"
+    output:
+        'medaka/{tool}_{species}_{length}_{error_rate}_{param}_concensus.fasta'
+    conda:
+        'env/medaka.yaml'
+    shell:
+        "medaka consensus {input.read} {output} --model {input.model} --batch_size 100 --threads 1"
+
+
+rule medaka_variant:
+    input:
+        consensus='medaka/{tool}_{species}_{length}_{error_rate}_{param}_concensus.fasta',
+        ref='data/ref_{species}.fasta',
+        read="mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.bam"
+    output:
+        'medaka/{tool}_{species}_{length}_{error_rate}_{param}.vcf'
+    conda:
+        'env/medaka.yaml'
+    shell:
+        "medaka variant {input.ref} {input.consensus} {output}"
 
 rule plot_default_command:
     input:

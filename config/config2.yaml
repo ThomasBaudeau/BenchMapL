@@ -1,10 +1,10 @@
 seed : 12345
 species: ['vih']
-size : [500,350]
+size : [350]
 error_rate : [0.90]
 number : 20
 variant: { 
   number: 1,
   specify: [],
-  taux: [50]}
+  taux: [80]}
 #{'i':['0r'],'d':['0r'],'s':['1r']}
