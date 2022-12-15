@@ -9,46 +9,55 @@ def mutate(nuc):
         mut = nucleotide[random.randint(0, 3)]
     return mut 
 
-def makerandom(file,wt,datapath,variant):
+def makerandom(file,wt,datapath,variant,tx,fvar):
     seq=''.join(wt[1:]).replace('\n','')
-    name='>'+find_species(datapath)+'var@'+str(variant)+'@@'
-    nbevent=random.randint(0,2)
-    if nbevent==0:   
-        seq,name=randominsert(seq, name, pos='random')
-    if nbevent == 1:
-        seq, name = randomdel(seq, name, pos='random')
-    if nbevent == 2:
-        seq, name = randomsub(seq, name, pos='random')
-    name+='xxx\n'
-    file.write(name)
+    species='>'+find_species(datapath)+'var@'+str(variant)+'\n'
+    name=''
+    for _ in range(calcnbmut(len(seq),(tx*2500))):
+        nbevent=random.randint(0,2)
+        fvar.write(find_species(datapath)+'var@'+str(variant)+'\t')
+        if nbevent==0:   
+            seq,name=randominsert(seq, name, pos='random')
+        if nbevent == 1:
+            seq, name = randomdel(seq, name, pos='random')
+        if nbevent == 2:
+            seq, name = randomsub(seq, name, pos='random')
+        fvar.write(name)
+    file.write(species)
     file.write(seq)
     file.close()
     return 
 
+def calcnbmut(ln,nb):
+    return int(ln/nb)
 
 def randominsert(seq,name,pos='random'):
     if pos == 'random':
         pos=random.randint(0,len(seq)-1)
     mut=mutate(None)
-    seq = seq[:pos]+mut+seq[pos:]
-    name += str(pos+1)+'I_'
-    return seq,name
+    res = seq[0:pos]+mut+seq[pos:]
+    name ='I\t{0}\t({1},{1}{2})\n'
+    mut1=seq[pos-1]
+    if pos-1<0:
+        mut1='.'
+    return res,name.format(str(pos+1),mut1,mut)
 
 
 def randomdel(seq, name, pos='random'):
     if pos == 'random':
         pos = random.randint(0, len(seq)-1)
-    seq = seq[:pos-1]+seq[pos:]
-    name += str(pos)+'D_'
-    return seq, name
+    nuc=seq[pos-2:pos]
+    res = seq[0:pos]+seq[pos+1:]
+    name = "D\t{0}\t({1},{2})\n"
+    return res, name.format(str(pos),nuc,seq[pos-2])
 
 def randomsub(seq, name, pos='random'):
     if pos == 'random':
         pos = random.randint(0, len(seq)-1)
     mut=mutate(seq[pos])
-    seq = seq[0:pos-1]+mut+seq[pos:]
-    name += str(pos)+'S_'
-    return seq,name
+    res = seq[0:pos]+mut+seq[pos+1:]
+    name = "S\t{0}\t({1},{2})\n"
+    return res,name.format(str(pos+1),seq[pos],mut)
 
 
 def sperandom(file, wt, input_sn, output_sn, param):
@@ -81,22 +90,19 @@ def do_something(data_path, out_path,param):
     :type out_path: string
     """
     wildtype=open(data_path[0],'r').readlines()
-    nbvariant=param['variant']['number']
     spevariant=param['variant']['specify']
-    variant_file=open('variant_file.txt','a')
-    for variant in range(len(out_path)):
-        file2=open(out_path[variant],'a')
-        # if len(spevariant)<variant:
-        #     makerandom(file2, wildtype, data_path, out_path, param)
-        # else:
-        #     sperandom(file2, wildtype, data_path, out_path, param)
-        if variant!=0:
-            makerandom(file2, wildtype, data_path[0], variant)
-        else:
+    resuvariant=open('variant_file.txt','w')
+    for idx,variant in enumerate(out_path):
+        file2=open(variant,'a')
+        if idx==0:
             file2.write(wildtype[0])
             file2.write(''.join(wildtype[1:]).replace('\n',''))
-        file2.close()
-
+        elif isinstance(spevariant[idx-1],(int,float)):
+            makerandom(file2, wildtype, data_path[0], idx,spevariant[idx-1],resuvariant)
+        else:
+            pass
+    file2.close()
+    resuvariant.close()
 
 
 do_something(snakemake.input,snakemake.output,snakemake.config)

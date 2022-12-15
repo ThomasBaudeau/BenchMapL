@@ -51,3 +51,5 @@ def do_something(data_path, out_path,param):
     comb.close()
 
 do_something(snakemake.input,snakemake.output,snakemake.config)
+
+

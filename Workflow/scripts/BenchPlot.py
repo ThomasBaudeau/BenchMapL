@@ -103,6 +103,32 @@ class result:
         """
         self.unmapped+=1
 
+class resu_bcf:
+    def __init__(self):
+       
+        self.TP=0
+        self.TN=0
+        self.FP=0
+        self.FN=0
+
+    def setname(self,name):
+        """set name
+
+        :param name: name of the result
+        :type name: str
+        """
+        self.name=name
+    
+    def setTP(self,TP):
+        self.TP+=1
+    def setTN(self,TP):
+        self.TN+=1
+    def setFP(self,TP):
+        self.FP+=1
+    def setFN(self,TP):
+        self.FN+=1
+
+
 
 def parsenamesimu(text):
     """return expected start position end position and number of reads mapped
@@ -542,5 +568,19 @@ def calcnbread(files,key):
     pos=list(open(files).readlines())
     for line in pos:
         if key in line:
-            return int(line[line.index(':')+1:])            
+            return int(line[line.index(':')+1:])  
 
+def parsevariant():
+    pass
+
+def plotvariant(data_path, out_path, myparam,test=False) :
+    files=list(data_path)
+    groups=group_input_simple(files,myparam)
+    for key in groups.keys():
+        if find_output(key,outpath=out_path): 
+            lst=groups[key]
+            results=[]
+            for tool in lst:         
+                bcf_in=pysam.VariantFile(tool)
+                name=findname(tool)
+                resu=parsevariant(bcf_in)
