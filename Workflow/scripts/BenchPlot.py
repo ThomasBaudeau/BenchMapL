@@ -119,13 +119,13 @@ class resu_bcf:
         """
         self.name=name
     
-    def setTP(self,TP):
+    def setTP(self):
         self.TP+=1
-    def setTN(self,TP):
+    def setTN(self):
         self.TN+=1
-    def setFP(self,TP):
+    def setFP(self):
         self.FP+=1
-    def setFN(self,TP):
+    def setFN(self):
         self.FN+=1
 
 
@@ -313,6 +313,55 @@ def plot_histoMU(results,nbreads,output):
         ax.legend()
         plt.subplots_adjust(left=0.2, bottom=0.2)
         plt.savefig(output,dpi=300,format='pdf')
+
+
+
+def plot_histoVar(results,output):
+    """plot histogram of unmapped /mapped reads 
+
+    :param results: list of each resu of the groups
+    :type results: list
+    :param output: name of the output
+    :type output: str
+    """
+    if output:
+        labels=[]
+        FP=[]
+        FN=[]
+        TP=[]
+        for resu in results:
+            labels.append(resu.name)
+            if resu.FP<50:
+                FP.append(resu.FP)
+            else:
+                FP.append(40)
+            FN.append(resu.FN)
+            TP.append(resu.TP)
+        print(FP,FN,TP,labels)
+        x = np.arange(len(labels))  # the label locations
+        width = 0.35  # the width of the bars
+
+        fig, ax = plt.subplots()
+        rects1 = ax.bar(x - width/3, FP, width, label='FP')
+        rects2 = ax.bar(x + width/3, FN, width, label='FN')
+        rects3 = ax.bar(x + width/3, TP, width, label='TP')
+
+        # Add some text for labels, title and custom x-axis tick labels, etc.
+        ax.set_ylabel('Number')
+        ax.set_title('Number of variants by TP FN and FP')
+        ax.set_xticks(x, labels)
+        ax.legend()
+
+        ax.bar_label(rects1, padding=3)
+        ax.bar_label(rects2, padding=3)
+        ax.bar_label(rects3, padding=3)
+
+        fig.tight_layout()
+        ax.legend()
+        plt.subplots_adjust(left=0.2, bottom=0.2)
+        plt.savefig(output,dpi=300,format='pdf')
+
+
 
 def plot_histoNotHuman(results,output):
     """plot histogram of the number of human reads mapped 
@@ -564,23 +613,52 @@ def plot_simple(data_path, out_path, myparam,test=False):
             if test:
                 return results
 
+
+
+
 def calcnbread(files,key):
     pos=list(open(files).readlines())
     for line in pos:
         if key in line:
             return int(line[line.index(':')+1:])  
 
-def parsevariant():
-    pass
+def parsevariant(bcf_in,resudic):
+    resu=resu_bcf()
+    posvar=len(resudic.keys())
+    for rec in bcf_in.fetch():
+        if rec.pos in resudic:
+            resu.setTP()
+            posvar-=1
+            print(rec.alleles,result[rec.pos])
+        else :
+            resu.setFP()
+    for _ in range(posvar):
+        resu.setFN()
+    return resu
+
+def parseresuvar():
+    bcf_resu=open('data/variant_file.txt','r')
+    tab=bcf_resu.readlines()
+    result={}
+    for elem in tab:
+        data=elem.split('\t')
+        result[data[2]]=data[3]
+    return result
 
 def plotvariant(data_path, out_path, myparam,test=False) :
     files=list(data_path)
     groups=group_input_simple(files,myparam)
+    results=[]
     for key in groups.keys():
         if find_output(key,outpath=out_path): 
             lst=groups[key]
             results=[]
-            for tool in lst:         
+            for tool in lst:     
                 bcf_in=pysam.VariantFile(tool)
                 name=findname(tool)
-                resu=parsevariant(bcf_in)
+                resu=parsevariant(bcf_in,parseresuvar())
+                resu.setname(findname(tool))
+                results.append(resu)
+            plot_histoVar(results,out_path[0])
+    
+

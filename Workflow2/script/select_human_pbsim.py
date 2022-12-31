@@ -36,7 +36,7 @@ def do_something(data_path, out_path):
     files2=open(snakemake.output[0],'a')
     files2.close()
     os.remove(snakemake.input[2]+'_0001.fastq')
-    os.remove(snakemake.input[2]+'_0001.maf')
+    #os.remove(snakemake.input[2]+'_0001.maf')
     os.remove(snakemake.input[2]+'_0001.ref')
 do_something(snakemake.input[0], snakemake.output[0])
 

@@ -82,12 +82,16 @@ def all_sample_best_medaka(wildcards):
                                 b=b.replace('{length}',str(length))
                                 b=b.replace('{param}',config['param'][elem[7:elem.find('_',7)]]['command'][i])
                                 ret.append(b)
-    print(ret)
+                    
+    ret.append('medaka/perfect_vih_350_0.9_perfect.vcf')
     return ret
 
 def getparam(wildcards):
     return wildcards.param.replace("#",' ').replace('§','_')
 
+rule run_var:
+    input:
+        expand( "plots/variant/{species}_{length}_{error_rate}_bc1.pdf", species=config['species'],length=config['length'],num=['1','2','3','4','5'],error_rate=config['error_rate'])
 rule run_default:
     input :
        expand( "plots/default/{species}_{length}_{error_rate}_rl{num}.pdf", species=config['species'],length=config['length'],num=['1','2','3','4','5'],error_rate=config['error_rate'])
@@ -134,6 +138,24 @@ rule medaka_concensus:
     shell:
         "medaka consensus {input.read} {output} --model {input.model} --batch_size 100 --threads 1"
 
+rule perfect_samtobam:
+    input:
+        ref='data/ref_{species}.fasta',
+        psam="data/perfect/{species}_350_0.9_perfect.sam"
+    output:
+        pbam="mapped_reads/perfect_{species}_{length}_{error_rate}_perfect.bam"
+    conda:
+        "env/samtool.yaml"
+    shell:
+        """samtools faidx {input.ref};
+        samtools view -bt {input.ref}.fai {input.psam}>mapped_reads/y.bam;
+        samtools sort -n mapped_reads/y.bam -o mapped_reads/yt.bam;
+        samtools fixmate mapped_reads/yt.bam mapped_reads/ok.bam;
+        samtools sort mapped_reads/ok.bam -o {output.pbam}
+        samtools index {output.pbam};
+        rm mapped_reads/y.bam;
+        rm mapped_reads/yt.bam;
+        rm mapped_reads/ok.bam"""
 
 rule medaka_variant:
     input:
@@ -174,6 +196,15 @@ rule plot_allstat_command:
     script:
         'scripts/plot_params.py'
 
+rule plot_variant_command:
+    input:
+       all_sample_best_medaka
+    output:
+        "plots/variant/{species}_{length}_{error_rate}_bc1.pdf",
+    conda:
+        "env/plotscript.yaml"
+    script:
+        'scripts/plot_var.py'
 
 #-------------converst sam-bam-stat rules-------------------------------
 rule sam_stat:

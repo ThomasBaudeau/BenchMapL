@@ -37,9 +37,10 @@ rule all:
 
 rule build_readsvariant:
     input:
-        expand("result/pbsim2/{{species}}_{variant}_{{msize}}_{{error_rate}}_reads.fasta",variant=VARIANT)
+        expand("result/pbsim2/{{species}}_{variant}_{{msize}}_{{error_rate}}_reads.fasta",variant=VARIANT),
+        
     output:
-        "result/pbsim2/{species}_{msize}_{error_rate}_variantreads.fasta"
+        "result/pbsim2/{species}_{msize}_{error_rate}_variantreads.fasta",
     conda:
         "envs/pbsim.yaml"
     script:
@@ -95,7 +96,7 @@ rule build_perfect:
     conda:
         'envs/last.yaml'
     shell:
-        'maf-convert -n sam {input.todel}_0001.maf > {output}'
+        'maf-convert -n sam {input.todel}_0001.maf > {output};'
 
 
 rule add_human:

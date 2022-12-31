@@ -13,51 +13,61 @@ def makerandom(file,wt,datapath,variant,tx,fvar):
     seq=''.join(wt[1:]).replace('\n','')
     species='>'+find_species(datapath)+'var@'+str(variant)+'\n'
     name=''
-    for _ in range(calcnbmut(len(seq),(tx*2500))):
+    lmut=[]
+    #tirer au sort toute les mutations puis les appliquer dans l'ordre decroissant
+    for _ in range(calcnbmut(len(seq),(tx*1000))):
         nbevent=random.randint(0,2)
-        fvar.write(find_species(datapath)+'var@'+str(variant)+'\t')
+        fvar.write(+'V'+str(variant)+find_species(datapath)+'\n')
         if nbevent==0:   
-            seq,name=randominsert(seq, name, pos='random')
+            name=randominsert(seq, name, pos='random')
         if nbevent == 1:
-            seq, name = randomdel(seq, name, pos='random')
+            name = randomdel(seq, name, pos='random')
         if nbevent == 2:
-            seq, name = randomsub(seq, name, pos='random')
-        fvar.write(name)
-    file.write(species)
-    file.write(seq)
-    file.close()
+            name = randomsub(seq, name, pos='random')
+        lmut.append(name)
+    lmut=sorted(lmut,key=lambda ok : ok[1],reverse=True)
+    makemute(file,seq,species,lmut,fvar)
+
     return 
 
+
+def makemute(file,seq,species,lmut,fvar):
+    file.write(species)
+    for tup in lmut:
+        pos=tup[1]
+        if tup[0]=='I':
+            seq=seq[0:pos]+tup[2][4]+seq[pos:]
+        if tup[0]=='D':
+            seq=seq[0:pos]+seq[pos+1:]
+        if tup[0]=='S':
+            seq=seq[0:pos]+tup[2][3]+seq[pos+1:]
+    fvar.write()
+    file.write(seq)
+    file.close()
 def calcnbmut(ln,nb):
     return int(ln/nb)
 
-def randominsert(seq,name,pos='random'):
+def randominsert(seq,pos='random'):
     if pos == 'random':
         pos=random.randint(0,len(seq)-1)
     mut=mutate(None)
-    res = seq[0:pos]+mut+seq[pos:]
-    name ='I\t{0}\t({1},{1}{2})\n'
     mut1=seq[pos-1]
     if pos-1<0:
         mut1='.'
-    return res,name.format(str(pos+1),mut1,mut)
+    return ('I',pos,'({0},{0}{1})'.format(mut1,mut))
 
 
-def randomdel(seq, name, pos='random'):
+def randomdel(seq, pos='random'):
     if pos == 'random':
         pos = random.randint(0, len(seq)-1)
-    nuc=seq[pos-2:pos]
-    res = seq[0:pos]+seq[pos+1:]
-    name = "D\t{0}\t({1},{2})\n"
-    return res, name.format(str(pos),nuc,seq[pos-2])
+    nuc=seq[pos-1:pos+1]
+    return ("D",pos,"({0},{1})".format(nuc,seq[pos-2]))
 
-def randomsub(seq, name, pos='random'):
+def randomsub(seq, pos='random'):
     if pos == 'random':
         pos = random.randint(0, len(seq)-1)
     mut=mutate(seq[pos])
-    res = seq[0:pos]+mut+seq[pos+1:]
-    name = "S\t{0}\t({1},{2})\n"
-    return res,name.format(str(pos+1),seq[pos],mut)
+    return ("S",pos,"({0},{1})".format(seq[pos],mut))
 
 
 def sperandom(file, wt, input_sn, output_sn, param):

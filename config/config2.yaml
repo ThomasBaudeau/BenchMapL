@@ -5,7 +5,7 @@ error_rate : [0.90]
 number : 200
 variant: { 
   number: 1,
-  specify: [0.5],
+  specify: [1],
   taux: [90]}
 #for specifie type of snp {'i':['0r'],'d':['0r'],'s':['1r']} else type 
-#number variant will be number/2500 variation
+#number variant will be number/1000 variation
