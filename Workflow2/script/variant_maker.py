@@ -15,15 +15,15 @@ def makerandom(file,wt,datapath,variant,tx,fvar):
     name=''
     lmut=[]
     #tirer au sort toute les mutations puis les appliquer dans l'ordre decroissant
+    fvar.write('V'+str(variant-1)+find_species(datapath)+'_'+str(len(seq))+':\n')
     for _ in range(calcnbmut(len(seq),(tx*1000))):
         nbevent=random.randint(0,2)
-        fvar.write(+'V'+str(variant)+find_species(datapath)+'\n')
         if nbevent==0:   
-            name=randominsert(seq, name, pos='random')
+            name=randominsert(seq, pos='random')
         if nbevent == 1:
-            name = randomdel(seq, name, pos='random')
+            name = randomdel(seq, pos='random')
         if nbevent == 2:
-            name = randomsub(seq, name, pos='random')
+            name = randomsub(seq, pos='random')
         lmut.append(name)
     lmut=sorted(lmut,key=lambda ok : ok[1],reverse=True)
     makemute(file,seq,species,lmut,fvar)
@@ -41,7 +41,7 @@ def makemute(file,seq,species,lmut,fvar):
             seq=seq[0:pos]+seq[pos+1:]
         if tup[0]=='S':
             seq=seq[0:pos]+tup[2][3]+seq[pos+1:]
-    fvar.write()
+        fvar.write(tup[0]+'\t'+str(pos)+'\t'+tup[2]+'\n')
     file.write(seq)
     file.close()
 def calcnbmut(ln,nb):
@@ -61,7 +61,7 @@ def randomdel(seq, pos='random'):
     if pos == 'random':
         pos = random.randint(0, len(seq)-1)
     nuc=seq[pos-1:pos+1]
-    return ("D",pos,"({0},{1})".format(nuc,seq[pos-2]))
+    return ("D",pos,"({0},{1})".format(nuc,seq[pos-1]))
 
 def randomsub(seq, pos='random'):
     if pos == 'random':
