@@ -118,10 +118,10 @@ def count_pos():
     pass
 
 def do_something(filein, fileout):
-   cor_sam(filein,'Workflow2/variant_file.txt',fileout)
+    cor_sam(filein[1]+'_0001.maf','variant_file.txt',fileout[0])
    
 
 
 
-do_something(snakemake.input[1], snakemake.output[0]) 
+do_something(snakemake.input, snakemake.output) 
 

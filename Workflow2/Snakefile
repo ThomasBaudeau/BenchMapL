@@ -96,7 +96,7 @@ rule pre_perfect:
         'result/pbsim2/simu_{species}_{variant}_{msize}_{error_rate}_0001_corrected.maf'
     conda:
         'envs/pyt.yaml'
-    shell:
+    script:
         'script/correct_sam.py'
 
 rule build_perfect:
