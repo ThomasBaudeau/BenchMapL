@@ -85,10 +85,10 @@ def correct_ref(s1,s2,dic):
         l_frag=int(tab[3])+(lst[0][2]-prev_inter(lst[-1]))
         if l_frag!=len(rep.replace('-','').replace('\n','')):
             print(l_frag,len(rep.replace('-','').replace('\n','')),tab[3],'\n',tab[2],lst)
-            raise  NameError('HiThere') 
+            raise  NameError('s1 error in length') 
         if int(tab2[3])!=len(rep2.replace('\n','').replace('-','')):
             print(tab2[3],len(rep2.replace('\n','').replace('-','')),'\n',tab2[0],tab2[1],tab2[2],tab2[3],tab2[4])
-            raise  NameError('HiThere') 
+            raise  NameError('s2 error in lenght') 
         s1=('{0}{7}{1}{7}{2}{7}{3}{7}{4}{7}{5}{7}{6}'.format(tab[0],header,str(stp_pos),str(l_frag),tab[4],str(dic[0]),rep,space)).replace('\n','')
         s2=('{0}{7}{1}{7}{2}{7}{3}{7}{4}{7}{5}{7}{6}'.format(tab2[0],tab2[1],tab2[2],tab2[3],tab2[4],tab2[5],rep2,space)).replace('\n','')
     else:
@@ -174,7 +174,7 @@ def correct_seq(seq,pos,st_pos,inter,tup,rep,s2,first_inter):
             res+=block+'-'
     
     if len(res[:-1])!=len(s2.replace('\n','')):
-        raise  NameError('HiThere') 
+        raise  NameError('s1 s2 different length') 
     return res[:-1],s2        
 
 def extract_spefile(file):
