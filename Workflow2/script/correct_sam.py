@@ -207,5 +207,5 @@ def do_something(filein, fileout):
 
 
 
-#do_something(snakemake.input, snakemake.output) 
-cor_sam('Workflow2/result/pbsim2/simu_vih_V0vih_350_0.9_0001.maf','Workflow2/variant_file.txt','Workflow2/result/pbsim2/simu_vih_V0vih_350_0.9_0001_corrected.maf')
+do_something(snakemake.input, snakemake.output) 
+#cor_sam('Workflow2/result/pbsim2/simu_vih_V0vih_350_0.9_0001.maf','Workflow2/variant_file.txt','Workflow2/result/pbsim2/simu_vih_V0vih_350_0.9_0001_corrected.maf')
