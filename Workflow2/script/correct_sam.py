@@ -146,7 +146,7 @@ def correct_seq(seq,pos,st_pos,inter,tup,rep,s2,first_inter):
                             res+=block[:-1]+rep+'-'
                         else:
                             s2=s2[0:len(res)+posi-1]+s2[len(res)+posi:]
-                            res+=block[:-1]+rep+'-'
+                            res+=block[:-1]+'-'
                         
                 else:
                     if posi!=len(block):
