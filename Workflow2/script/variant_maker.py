@@ -61,6 +61,7 @@ def randomdel(seq, pos='random'):
     if pos == 'random':
         pos = random.randint(0, len(seq)-1)
     nuc=seq[pos-1:pos+1]
+    #todo position 0 voir au dessus
     return ("D",pos,"({0},{1})".format(nuc,seq[pos-1]))
 
 def randomsub(seq, pos='random'):

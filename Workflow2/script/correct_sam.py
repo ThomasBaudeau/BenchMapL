@@ -74,15 +74,17 @@ def correct_ref(s1,s2,dic):
     tab=list(filter(None,s1.split(' ')))
     tab2=list(filter(None,s2.split(' ')))
     space=' '
+    
     lst,stp_pos,first_inter=find_inter(int(tab[2]),int(tab[3]),dic)
+    if stp_pos==4641:
+        pass
     rep =tab[6]
     rep2=tab2[6]
-    if tab2[1]=='S1_906':
-        pass
+
     if len(lst)>0:
         for pos in lst:
             rep,rep2=correct_seq(rep,int(pos[0]),stp_pos,int(pos[2]),pos[1],pos[3],rep2,first_inter)
-        l_frag=int(tab[3])+(lst[0][2]-prev_inter(lst[-1]))
+        l_frag=int(tab[3])+(next_inter(lst[0])-lst[-1][2])
         if l_frag!=len(rep.replace('-','').replace('\n','')):
             print(l_frag,len(rep.replace('-','').replace('\n','')),tab[3],'\n',tab[2],lst)
             raise  NameError('s1 error in length') 
@@ -93,6 +95,7 @@ def correct_ref(s1,s2,dic):
         s2=('{0}{7}{1}{7}{2}{7}{3}{7}{4}{7}{5}{7}{6}'.format(tab2[0],tab2[1],tab2[2],tab2[3],tab2[4],tab2[5],rep2,space)).replace('\n','')
     else:
         s2=s2.replace('\n','')
+
         s1=('{0}{7}{1}{7}{2}{7}{3}{7}{4}{7}{5}{7}{6}'.format(tab[0],header,tab[2],tab[3],tab[4],str(dic[0]),tab[6],space)).replace('\n','')
     return s1,s2
         
@@ -105,27 +108,33 @@ def prev_inter(tup):
         rep+=1
     return rep
 
-
+def next_inter(tup):
+    rep=int(tup[2])
+    if tup[1]=='D':
+        rep+=1
+    elif tup[1]=='I':
+        rep-=1
+    return rep
 
 def find_inter(a,b,dic):
     lst=[]
     i=0
     stp_pos=10000000000000000
     first_inter=0
-    while(i < len(dic[1])-1 and stp_pos==10000000000000000):
+    while(i <= len(dic[1])-1 and stp_pos==10000000000000000):
         if int(dic[1][-(i+1)])>a+dic[3][-(i+1)]:
-            stp_pos=a+dic[3][-(i+1)]
-            first_inter=dic[3][-(i+1)]
+            stp_pos=a+prev_inter((0,dic[2][-(i+1)],dic[3][-(i+1)]))
+            first_inter=(0,dic[2][-(i+1)],prev_inter((0,dic[2][-(i+1)],dic[3][-(i+1)])))
         i+=1
                 
     for idx,p in enumerate(dic[1]):
-        if int(p)>=stp_pos and int(p)<stp_pos+b+(dic[3][idx]-first_inter)-1:
+        if int(p)>=stp_pos and int(p)<stp_pos+b+(dic[3][idx]-next_inter(first_inter)):
             try:
-                lst.append((int(p),dic[2][idx],dic[3][idx],dic[4][idx]))
+                lst.append((int(p),dic[2][idx],prev_inter((0,dic[2][idx],dic[3][idx])),dic[4][idx]))
             except:
                 print(idx,dic)
                 raise 'ok'
-    return lst,stp_pos,first_inter
+    return lst,stp_pos,first_inter[2]
 
 def correct_seq(seq,pos,st_pos,inter,tup,rep,s2,first_inter):
     res=''
@@ -134,9 +143,9 @@ def correct_seq(seq,pos,st_pos,inter,tup,rep,s2,first_inter):
     make=True
     for idx,block in enumerate(blocks):
         count+=len(block)
-        if count>pos+(inter-first_inter)-1 and make:
+        if count+(inter-first_inter)>pos and make:
             count-=len(block)
-            posi=pos-count+(inter-first_inter)
+            posi=(pos)-(count+(inter-first_inter))
             if tup=='I' :
                 if s2[len(res)+posi]!='-':
                     if posi!=len(block):
@@ -156,14 +165,14 @@ def correct_seq(seq,pos,st_pos,inter,tup,rep,s2,first_inter):
                     else:
                         s2=s2[0:len(res)+posi]+s2[len(res)+posi+1:]
                         res+=block[:-1]+'-'
-            if tup=='D':
+            elif tup=='D':
                 if posi!=len(block):
                     s2=correct_s2(s2,len(res)+posi)
                     res+=block[0:posi]+rep+block[posi:]+'-'
                 else:
                     s2=correct_s2(s2,len(res)+posi)
                     res+=block+rep+'-'
-            if tup=='S':
+            elif tup=='S':
                 if posi!=len(block):
                     res+=block[0:posi]+rep+block[posi+1:]+'-'
                 else:
