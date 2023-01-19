@@ -74,13 +74,14 @@ def correct_ref(s1,s2,dic):
     tab=list(filter(None,s1.split(' ')))
     tab2=list(filter(None,s2.split(' ')))
     space=' '
-    
-    lst,stp_pos,first_inter=find_inter(int(tab[2]),int(tab[3]),dic)
-    if stp_pos==4641:
+    if tab[2]=='2806':
         pass
+    lst,stp_pos,first_inter=find_inter(int(tab[2]),int(tab[3]),dic)
+    
     rep =tab[6]
     rep2=tab2[6]
-
+    if stp_pos==2806:
+        pass
     if len(lst)>0:
         for pos in lst:
             rep,rep2=correct_seq(rep,int(pos[0]),stp_pos,int(pos[2]),pos[1],pos[3],rep2,first_inter)
@@ -122,19 +123,20 @@ def find_inter(a,b,dic):
     stp_pos=10000000000000000
     first_inter=0
     while(i <= len(dic[1])-1 and stp_pos==10000000000000000):
-        if int(dic[1][-(i+1)])>a+dic[3][-(i+1)]:
+        if int(dic[1][-(i+1)])>a+prev_inter((0,dic[2][-(i+1)],dic[3][-(i+1)])):
             stp_pos=a+prev_inter((0,dic[2][-(i+1)],dic[3][-(i+1)]))
-            first_inter=(0,dic[2][-(i+1)],prev_inter((0,dic[2][-(i+1)],dic[3][-(i+1)])))
-        i+=1
-                
+            elem=(0,dic[2][-(i+1)],dic[3][-(i+1)])
+            first_inter=prev_inter(elem)
+        i+=1       
     for idx,p in enumerate(dic[1]):
-        if int(p)>=stp_pos and int(p)<stp_pos+b+(dic[3][idx]-next_inter(first_inter)):
+        if int(p)>stp_pos and int(p)<stp_pos+b+(prev_inter((0,dic[2][idx],dic[3][idx]))-first_inter):
             try:
                 lst.append((int(p),dic[2][idx],prev_inter((0,dic[2][idx],dic[3][idx])),dic[4][idx]))
             except:
                 print(idx,dic)
                 raise 'ok'
-    return lst,stp_pos,first_inter[2]
+        
+    return lst,stp_pos,first_inter
 
 def correct_seq(seq,pos,st_pos,inter,tup,rep,s2,first_inter):
     res=''
@@ -144,6 +146,7 @@ def correct_seq(seq,pos,st_pos,inter,tup,rep,s2,first_inter):
     for idx,block in enumerate(blocks):
         count+=len(block)
         if count+(inter-first_inter)>pos and make:
+            
             count-=len(block)
             posi=(pos)-(count+(inter-first_inter))
             if tup=='I' :
@@ -181,9 +184,10 @@ def correct_seq(seq,pos,st_pos,inter,tup,rep,s2,first_inter):
             make=False  
         else:
             res+=block+'-'
-    
+    if make:
+        raise NameError('one mutation did not be errased')
     if len(res[:-1])!=len(s2.replace('\n','')):
-        raise  NameError('s1 s2 different length') 
+        raise  NameError('s1 s2 different length',len(res[:-1]),len(s2.replace('\n',''))) 
     return res[:-1],s2        
 
 def extract_spefile(file):
