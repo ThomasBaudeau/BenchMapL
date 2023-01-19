@@ -97,7 +97,7 @@ def correct_ref(s1,s2,dic):
     else:
         s2=s2.replace('\n','')
 
-        s1=('{0}{7}{1}{7}{2}{7}{3}{7}{4}{7}{5}{7}{6}'.format(tab[0],header,tab[2],tab[3],tab[4],str(dic[0]),tab[6],space)).replace('\n','')
+        s1=('{0}{7}{1}{7}{2}{7}{3}{7}{4}{7}{5}{7}{6}'.format(tab[0],header,str(stp_pos),tab[3],tab[4],str(dic[0]),tab[6],space)).replace('\n','')
     return s1,s2
         
     
@@ -122,12 +122,15 @@ def find_inter(a,b,dic):
     i=0
     stp_pos=10000000000000000
     first_inter=0
-    while(i <= len(dic[1])-1 and stp_pos==10000000000000000):
-        if int(dic[1][-(i+1)])>a+prev_inter((0,dic[2][-(i+1)],dic[3][-(i+1)])):
-            stp_pos=a+prev_inter((0,dic[2][-(i+1)],dic[3][-(i+1)]))
-            elem=(0,dic[2][-(i+1)],dic[3][-(i+1)])
-            first_inter=prev_inter(elem)
-        i+=1       
+    if a<int(dic[1][-1]):
+        while(i <= len(dic[1])-1 and stp_pos==10000000000000000):
+            if int(dic[1][-(i+1)])>a+prev_inter((0,dic[2][-(i+1)],dic[3][-(i+1)])):
+                stp_pos=a+prev_inter((0,dic[2][-(i+1)],dic[3][-(i+1)]))
+                elem=(0,dic[2][-(i+1)],dic[3][-(i+1)])
+                first_inter=prev_inter(elem)
+            i+=1
+    else:
+        stp_pos=a       
     for idx,p in enumerate(dic[1]):
         if int(p)>stp_pos and int(p)<stp_pos+b+(prev_inter((0,dic[2][idx],dic[3][idx]))-first_inter):
             try:
@@ -135,7 +138,6 @@ def find_inter(a,b,dic):
             except:
                 print(idx,dic)
                 raise 'ok'
-        
     return lst,stp_pos,first_inter
 
 def correct_seq(seq,pos,st_pos,inter,tup,rep,s2,first_inter):
