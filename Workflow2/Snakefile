@@ -108,7 +108,7 @@ rule build_perfect:
     conda:
         'envs/last.yaml'
     shell:
-        'maf-convert -n sam {input.cor} > {output};'
+        'maf-convert --dictionary -n sam {input.cor} > {output};'
 
 
 rule add_human:

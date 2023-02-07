@@ -122,7 +122,7 @@ def find_inter(a,b,dic):
     i=0
     stp_pos=10000000000000000
     first_inter=0
-    if a<int(dic[1][-1]):
+    if a<int(dic[1][0])+prev_inter((0,dic[2][(0)],dic[3][(0)])):
         while(i <= len(dic[1])-1 and stp_pos==10000000000000000):
             if int(dic[1][-(i+1)])>a+prev_inter((0,dic[2][-(i+1)],dic[3][-(i+1)])):
                 stp_pos=a+prev_inter((0,dic[2][-(i+1)],dic[3][-(i+1)]))
@@ -130,7 +130,7 @@ def find_inter(a,b,dic):
                 first_inter=prev_inter(elem)
             i+=1
     else:
-        stp_pos=a       
+        stp_pos=a+dic[3][(0)]     
     for idx,p in enumerate(dic[1]):
         if int(p)>stp_pos and int(p)<stp_pos+b+(prev_inter((0,dic[2][idx],dic[3][idx]))-first_inter):
             try:
