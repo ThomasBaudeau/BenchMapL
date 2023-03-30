@@ -102,7 +102,7 @@ def do_something(data_path, out_path,param):
     """
     wildtype=open(data_path[0],'r').readlines()
     spevariant=param['variant']['specify']
-    resuvariant=open('variant_file.txt','w')
+    resuvariant=open(data_path[0].split('_')[1].replace('.fasta','_')+'variant_file.txt','w')
     for idx,variant in enumerate(out_path):
         file2=open(variant,'a')
         if idx==0:

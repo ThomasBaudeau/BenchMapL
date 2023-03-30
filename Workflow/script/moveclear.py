@@ -8,7 +8,6 @@ def do_something(data_path, out_path,param):
     os.renames(data_path[0].replace('variantreads.fastq','perfect.sam'),out_path[1])
     shutil.rmtree('result')
     shutil.rmtree('perfect_sam')
-    os.renames('variant_file.txt','data/variant_file.txt')
     for f in glob.glob(todel+'*'):
         os.remove(f)
 

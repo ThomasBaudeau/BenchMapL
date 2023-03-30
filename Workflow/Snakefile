@@ -661,6 +661,16 @@ checkpoint build_variant:
         "envs/pyt.yaml"
     script:
         'script/variant_maker.py'
+
+rule varfile:
+    input:
+        expand('data/ref_{{species}}_{variant}.fasta',variant=VARIANT)
+    output:
+        "data/{species}_variant_file.txt"
+    shell:
+        "mv {wilcards.species}_variant_file.txt {output}"
+    
+
         
 #----------rule for pbsim-----------------
 rule simu_phase:
