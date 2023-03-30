@@ -1,6 +1,5 @@
 channels:
   - bioconda
+  
 dependencies:
-  - samtools 
-  - picard
-  - java-jdk
+  - bwa

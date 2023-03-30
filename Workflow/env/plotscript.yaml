@@ -10,4 +10,5 @@ dependencies:
   - matplotlib=3.5
   - pysam=0.18.0
   - upsetplot
+  - pandas
 

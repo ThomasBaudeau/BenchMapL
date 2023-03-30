@@ -2,8 +2,9 @@ import re
 from upsetplot import from_contents
 from upsetplot import UpSet
 import matplotlib.pyplot as plt
-import pysam
 import numpy as np
+import pandas as pd
+import pysam
 
 
 class result:
@@ -138,11 +139,15 @@ def parsenamesimu(text):
     :return: expected start position, expected end postion and number of mapped reads
     :rtype: tupple
     """
-    st_pos= int(text.split('_')[1])
-    end_pos=int(text.split('_')[6])
+    try:
+        st_pos= int(text.split('_')[2])
+        end_pos=int(text.split('_')[7])
+    except:
+        st_pos='NaN'
+        end_pos=''
     return st_pos,end_pos,(st_pos+end_pos)
 
-def read_align(resu,read,threshold=0):
+def read_align(resu,read):
     """increm resu cor for a read
 
     :param resu: class resu
@@ -154,17 +159,23 @@ def read_align(resu,read,threshold=0):
     :return: result of the operation true if read is increm else false
     :rtype: boolean
     """
-    st_ref,mbase_ref,end_ref=parsenamesimu(read.query_name)
-    st_alg=read.reference_start
-    end_alg=read.reference_end
-    mbase_alg=read.reference_length
-    crit1=abs(st_ref-st_alg)
-    crit2=abs(end_ref-end_alg)
-    if (crit1 + crit2)<=threshold :
-        resu.increm_cor(threshold)
+    try: 
+        st_ref,mbase_ref,end_ref=parsenamesimu(read.query_name)
+        st_alg=read.reference_start
+        
+        end_alg=read.reference_end
+        mbase_alg=read.reference_length
+        crit1=abs(st_ref-st_alg)
+        crit2=abs(end_ref-end_alg)
+        for threshold in [0,5,10,20]:
+            if (crit1 + crit2)<=threshold :
+                resu.increm_cor(threshold)
+                return True
+        return False 
+    except:
+        resu.increm_cor(0) 
         return True
-    else:
-        return False
+    
 
 def countdiff(bamFP):
     """fill the different result for the input bam
@@ -180,12 +191,9 @@ def countdiff(bamFP):
             if not read.is_secondary:
                 if not read.is_unmapped:
                     resu.increm_mapped()
-                    for threshold in [0,5,10,20]:
-                        rep=read_align(resu,read,threshold)
-                        if rep:
-                            break
-                        if not rep and threshold==20:
-                            resu.addGroup2(read.query_name)
+                    rep=read_align(resu,read)
+                    if not rep:
+                        resu.addGroup2(read.query_name)
                 else:
                     resu.addGroup1(read.query_name)
                     resu.increm_unmapped()
@@ -238,11 +246,14 @@ def is_human(read,resu):
     :return: False if missaligned else True
     :rtype: boolean 
     """
-    if read.query_name.split('_')[2]=='human':
-        if not read.is_unmapped:
-            resu.missalign()
-        return False
-    return True
+    try:
+        if read.query_name.split('_')[2]=='human':
+            if not read.is_unmapped:
+                resu.missalign()
+            return False
+        return True
+    except:
+        return True
 
 def get_nbHuman(results):
     """return number of missaligned reads for each result of a groups
@@ -337,7 +348,6 @@ def plot_histoVar(results,output):
                 FP.append(40)
             FN.append(resu.FN)
             TP.append(resu.TP)
-        print(FP,FN,TP,labels)
         x = np.arange(len(labels))  # the label locations
         width = 0.35  # the width of the bars
 
@@ -603,6 +613,7 @@ def plot_simple(data_path, out_path, myparam,test=False):
                 pysam.set_verbosity(save)
                 name=findname(tool)
                 resu=countdiff(bamFP)
+                
                 resu.setname(name)
                 results.append(resu)
             common_error_gp1(results,find_output(key,'rl4', out_path))
@@ -622,28 +633,22 @@ def calcnbread(files,key):
         if key in line:
             return int(line[line.index(':')+1:])  
 
-def parsevariant(bcf_in,resudic):
+def parsevariant(file,resudic):
     resu=resu_bcf()
+    bcf_in=pysam.VariantFile(file)
     posvar=len(resudic.keys())
     for rec in bcf_in.fetch():
-        if rec.pos in resudic:
+        print(resudic,(int(rec.pos)+1))
+        if str((int(rec.pos)-1)) in resudic:
             resu.setTP()
             posvar-=1
-            print(rec.alleles,result[rec.pos])
         else :
             resu.setFP()
     for _ in range(posvar):
         resu.setFN()
     return resu
 
-def parseresuvar():
-    bcf_resu=open('data/variant_file.txt','r')
-    tab=bcf_resu.readlines()
-    result={}
-    for elem in tab:
-        data=elem.split('\t')
-        result[data[2]]=data[3]
-    return result
+
 
 def plotvariant(data_path, out_path, myparam,test=False) :
     files=list(data_path)
@@ -660,5 +665,51 @@ def plotvariant(data_path, out_path, myparam,test=False) :
                 resu.setname(findname(tool))
                 results.append(resu)
             plot_histoVar(results,out_path[0])
+
+
+def find_info (file,par):
+    param=file[file.index("/")+1:].split('_')
+    return {'tname':param[0],'specie':param[1],'lenght':param[2],'er':param[3],'param':param[4],'cov':par['number'],'model':par['model']}
+
+
+def files_stats(data_path, out_path, myparam):
+    """main function
+
+    :param data_path: snakemake.input
+    :type data_path: list
+    :param out_path: snakemake.output
+    :type out_path: list
+    :param myparam: config files
+    :type myparam: list
+    """
+    files=list(data_path)
+    for idx,file in enumerate(files):
+        infos=find_info (file,myparam)
+        save = pysam.set_verbosity(0)
+        bamFP = pysam.AlignmentFile(file.replace('medaka','mapped_reads').replace('.vcf','.bam'), "rb")
+        pysam.set_verbosity(save)
+        resu=countdiff(bamFP)
+        resu2=parsevariant(file,parseresuvar())
+        infos.update(mapped=resu.mapped,unmapped=resu.unmapped,wrongalign=resu.missaligned,r0=resu.cor,r5=resu.cor_5,r10=resu.cor_10,r20=resu.cor_20,TP=resu2.TP,FN=resu2.FN,FP=resu2.FP)
+        if idx==0:
+            df=pd.DataFrame(data=infos,index=[idx])
+        else:
+            df2=pd.DataFrame(data=infos,index=[idx])
+            df=pd.concat([df,df2])   
+    df.to_csv('results.csv')
     
 
+def parseresuvar(file=''):
+    bcf_resu=open(file+'data/variant_file.txt','r')
+    tab=bcf_resu.readlines()
+    result={}
+    for elem in tab:
+        if ':' in elem.replace('\n','')[-1]:
+            pass
+        else:
+            data=elem.split('\t')
+            result[data[1]]=data[2]
+    return result
+
+
+#rajouter +1 quand insertion ou délét

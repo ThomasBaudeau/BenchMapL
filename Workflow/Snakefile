@@ -1,6 +1,24 @@
 import os
 # config file name
 configfile: '../config/config.yaml'
+def autocoverage(wildcards):
+    return int(((9000*int(config['number']))/(int(wildcards.length)/2)))
+
+
+def variant(wildcards):
+    species=config['species']
+    var=['WT']
+    for j in species:
+        for i in range(config['variant']['number']):
+            var.append('V'+str(i)+j)
+    return var
+
+VARIANT=variant(config)
+
+
+ruleorder: add_human > convert_header 
+
+
 
 TOOLS= [tool for tool in config['param']]
 #Path
@@ -10,13 +28,17 @@ path_maketool = os.path.join(path_tool,"PipTool")
 path_os_minimap=os.path.join(path_maketool,"os-minimap2")
 path_sync_minimap=os.path.join(path_maketool,"syncmer_mapping/syncmer_minimap")
 path_blend=os.path.join(path_maketool,"blend/bin")
+path_blast2sam=os.path.join(path_tool,"../bin/Blast2sam/jvarkit/dist/")
 #Function
+
+
+
 def two_sample_all(wildcards):
     ret=[]
     a= expand( "mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.bam",zip,tool=TOOLS,allow_missing=True)
     for elem in a:
         for specie in config['species']:
-            for length in ['5000','350']:
+            for length in config['length']:
                 for er in config['error_rate']:
                     for aparam in config['param'][elem[13:elem.find('_',13)]]['command']:
                         b=elem.replace('{species}',specie)
@@ -25,6 +47,9 @@ def two_sample_all(wildcards):
                         b=b.replace('{param}',aparam)
                         ret.append(b)
     return ret
+
+
+
 
 def all_sample_default(wildcards):
     ret=[]
@@ -68,6 +93,26 @@ def all_sample_best(wildcards):
                                 ret.append(b)
     return ret
 
+
+def all_reads(wildcards):
+    ret=[]
+    a= expand( "medaka/{tool}_{species}_{length}_{error_rate}_{param}.vcf",zip,tool=TOOLS,allow_missing=True)
+    for elem in a:
+        for specie in config['species']:
+            for length in config['length']:
+                for er in config['error_rate']:
+                    for aparam in config['param'][elem[7:elem.find('_',7)]]['command']:
+                        b=elem.replace('{species}',specie)
+                        b=b.replace('{error_rate}',er)
+                        b=b.replace('{length}',str(length))
+                        b=b.replace('{param}',aparam)
+                        ret.append(b)
+    for specie in config['species']:
+            for length in config['length']:
+                for er in config['error_rate']:             
+                    ret.append('medaka/perfect_{species}_{alength}_{error_rate}_perfect.vcf'.format(species=specie,alength=str(length),error_rate=er))
+    return ret
+
 def all_sample_best_medaka(wildcards):
     ret=[]
     a= expand( "medaka/{tool}_{species}_{length}_{error_rate}_{param}.vcf",zip,tool=TOOLS,allow_missing=True)
@@ -82,8 +127,10 @@ def all_sample_best_medaka(wildcards):
                                 b=b.replace('{length}',str(length))
                                 b=b.replace('{param}',config['param'][elem[7:elem.find('_',7)]]['command'][i])
                                 ret.append(b)
-                    
-    ret.append('medaka/perfect_vih_350_0.9_perfect.vcf')
+    for specie in config['species']:
+                for length in config['length']:
+                    for er in config['error_rate']:             
+                        ret.append('medaka/perfect_{species}_{alength}_{error_rate}_perfect.vcf'.format(species=specie,alength=str(length),error_rate=er)) 
     return ret
 
 def getparam(wildcards):
@@ -126,6 +173,21 @@ rule plot_best_command:
     script:
         'scripts/plot_default.py'
 
+
+rule all_stats_csv:
+    input:
+        all_reads
+    output:
+        'results.csv'
+    conda:
+       "env/plotscript.yaml"
+    script:
+       'scripts/all_stats.py'
+
+rule all:
+    input:
+        'results.csv'
+        
 rule medaka_concensus:
     input:
         model='data/model/r103_min_high_g360_model.hdf5',
@@ -141,7 +203,7 @@ rule medaka_concensus:
 rule perfect_samtobam:
     input:
         ref='data/ref_{species}.fasta',
-        psam="data/perfect/{species}_350_0.9_perfect.sam"
+        psam="data/perfect/{species}_{length}_{error_rate}_perfect.sam"
     output:
         pbam="mapped_reads/perfect_{species}_{length}_{error_rate}_perfect.bam"
     conda:
@@ -225,16 +287,40 @@ rule sam_bam:
     conda:
         "env/samtool.yaml"
     shell:
-       "samtools sort {input} > {output};rm {input};samtools index {output}"
+       "samtools sort {input} > {output};samtools index {output}"#;rm {input};
 
 rule calcnbreads:
     input:
-        expand("data/samples/{species}_{length}_{error_rate}_reads.fasta", species=config['species'],length=config['length'],error_rate=config['error_rate'])
+        expand("data/samples/{species}_{length}_{error_rate}_reads.fastq", species=config['species'],length=config['length'],error_rate=config['error_rate'])
     output:
         'calcreads.txt'
     shell:
         "grep -c '>' {input} >> {output}"
 #-------------Tools rules-------------------------------
+
+
+
+rule all_bwamem:
+    input:
+        expand("mapped_reads/bwamem_{species}_{length}_{error_rate}_{param}.sam", species=config['species'],length=config['length'],param=config['param']['bwamem']['command'],error_rate=config['error_rate'])
+
+rule bwamem:
+    input:
+        ref='data/ref_{species}.fasta',
+        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq'
+    output:
+        "mapped_reads/bwamem_{species}_{length}_{error_rate}_{param}.sam"
+    conda:
+        "env/bwamem.yaml"
+    params:
+        getparam
+    benchmark:
+        "benchmarks/bwamem_{species}_{length}_{error_rate}_{param}.benchmark.txt"
+    shell:
+        "bwa index {input.ref} ;bwa mem -x ont2d {params} -t 2 {input.ref} {input.reads} > {output}"
+
+
+
 
 rule all_minimap2:
     input:
@@ -243,7 +329,7 @@ rule all_minimap2:
 rule minimap2:
     input:
         ref='data/ref_{species}.fasta',
-        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fasta'
+        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq'
     output:
         "mapped_reads/minimap2_{species}_{length}_{error_rate}_{param}.sam"
     conda:
@@ -262,7 +348,7 @@ rule all_graphmap2:
 rule graphmap2:
     input:
         ref= 'data/ref_{species}.fasta',
-        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fasta'
+        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq'
     output:
         "mapped_reads/graphmap2_{species}_{length}_{error_rate}_{param}.sam"
     conda:
@@ -282,7 +368,7 @@ rule all_graphmap:
 rule graphmap:
     input:
         ref= 'data/ref_{species}.fasta',
-        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fasta'
+        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq'
     output:
         "mapped_reads/graphmap_{species}_{length}_{error_rate}_{param}.sam"
     conda:
@@ -302,7 +388,7 @@ rule graphmap:
 # rule mm2f:
 #     input:
 #         ref= 'data/ref_{species}.fasta',
-#         reads= 'data/samples/{species}_{length}_{error_rate}_reads.fasta'
+#         reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq'
 #     output:
 #         "mapped_reads/mm2f_{species}_{length}_{error_rate}_{param}.sam"
 #     params:
@@ -317,12 +403,13 @@ rule all_blasr:
         expand("mapped_reads/blasr_{species}_{length}_{error_rate}_{param}.sam",species=config['species'],length=config['length'],param=config['param']['blasr']['command'],error_rate=config['error_rate'])
 
 
-rule blasr:
+rule blasr_temp:
     input:
         ref= 'data/ref_{species}.fasta',
-        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fasta'
+        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq'
     output:
-        "mapped_reads/blasr_{species}_{length}_{error_rate}_{param}.sam"
+        sam=temp("mapped_reads/blasr_{species}_{length}_{error_rate}_{param}_temp.sam"),
+        unmap=temp("temp_{species}_{length}_{error_rate}_{param}.txt")
     conda:
         "env/blasr.yaml"
     params:
@@ -330,7 +417,17 @@ rule blasr:
     benchmark:
         "benchmarks/blasr_{species}_{length}_{error_rate}_{param}.benchmark.txt"
     shell:
-        "blasr {input.reads} {input.ref} {params} --sam --out {output}> {output}"
+        "blasr {input.reads} {input.ref} {params} --sam -m 1 --unaligned {output.unmap} --noPrintUnalignedSeqs --out {output.sam}> {output.sam}"
+
+rule blasr:
+    input:
+        sam="mapped_reads/blasr_{species}_{length}_{error_rate}_{param}_temp.sam",
+        unmap=temp("temp_{species}_{length}_{error_rate}_{param}.txt")
+    output:
+        "mapped_reads/blasr_{species}_{length}_{error_rate}_{param}.sam"
+    shell:
+        """cat {input.sam}>{output};sed 's/>//' {input.unmap} | sed 's/$/\t4\t\*\t0\t0\t\*\t\*\t0\t0\t\*\t\*\trl:i:0/' >>{output}"""
+
 
 rule all_winnowmap:
     input:
@@ -340,7 +437,7 @@ rule all_winnowmap:
 rule winnowmap:
     input:
         ref= 'data/ref_{species}.fasta',
-        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fasta',
+        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq',
         meril='repetitive{species}_k10.txt',
     output:
         "mapped_reads/winnowmap2_{species}_{length}_{error_rate}_{param}.sam"
@@ -373,7 +470,7 @@ rule all_magicblast:
 rule magicblast:
     input:
         ref= 'data/ref_{species}.fasta',
-        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fasta',
+        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq',
     output:
         "mapped_reads/magicblast_{species}_{length}_{error_rate}_{param}.sam"
     conda:
@@ -383,7 +480,7 @@ rule magicblast:
     benchmark:
         "benchmarks/magicblast_{species}_{length}_{error_rate}_{param}.benchmark.txt"
     shell:
-        "makeblastdb -in {input.ref} -out blastdb/default -parse_seqids -dbtype nucl; magicblast -query {input.reads} -db blastdb/default {params} -out {output};"
+        "makeblastdb -in {input.ref} -out blastdb/default -parse_seqids -dbtype nucl; magicblast -query {input.reads} -db blastdb/default -infmt fastq {params} -out {output};"
 
 rule all_lra:
     input:
@@ -392,7 +489,7 @@ rule all_lra:
 rule lra:
     input:
         ref= 'data/ref_{species}.fasta',
-        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fasta',
+        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq',
     output:
         "mapped_reads/lra_{species}_{length}_{error_rate}_{param}.sam"
     conda:
@@ -411,7 +508,7 @@ rule all_minimapos:
 rule minimapos:
     input:
         ref='data/ref_{species}.fasta',
-        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fasta'
+        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq'
     output:
         "mapped_reads/minimapos_{species}_{length}_{error_rate}_{param}.sam"
     conda:
@@ -430,7 +527,7 @@ rule all_syncminimap:
 rule syncminimap:
     input:
         ref='data/ref_{species}.fasta',
-        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fasta'
+        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq'
     output:
         "mapped_reads/syncminimap_{species}_{length}_{error_rate}_{param}.sam"
     conda:
@@ -449,7 +546,7 @@ rule all_blend:
 rule blend:
     input:
         ref='data/ref_{species}.fasta',
-        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fasta'
+        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq'
     output:
         "mapped_reads/blend_{species}_{length}_{error_rate}_{param}.sam"
     conda:
@@ -460,6 +557,263 @@ rule blend:
         "benchmarks/blend_{species}_{length}_{error_rate}_{param}.benchmark.txt"
     shell:
         "{path} -ax map-ont {{params}} {{input.ref}} {{input.reads}} > {{output}}".format(path=os.path.join(path_blend,'blend'))
+
+
+rule all_blast:
+    input:
+        expand("mapped_reads/blast_{species}_{length}_{error_rate}_{param}.sam",species=config['species'],length=config['length'],param=config['param']['magicblast']['command'],error_rate=config['error_rate'])
+
+
+# rule blast:
+#     input:
+#         ref= 'data/ref_{species}.fasta',
+#         reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq',
+#     output:
+#         "mapped_reads/blast_{species}_{length}_{error_rate}_{param}.blastsam"
+#     conda:
+#         "env/blast.yaml"
+#     params:
+#         getparam
+#     benchmark:
+#         "benchmarks/blast_{species}_{length}_{error_rate}_{param}.benchmark.txt"
+#     shell:
+#         "makeblastdb -in {input.ref} -out blast2db/default -parse_seqids -dbtype nucl; blastn -query {input.reads} -db blast2db/default {params} -out {output};rm blast2db -r;"
+
+rule build_dict:
+    input:
+        'data/ref_{species}.fasta'
+    output:
+        'data/ref_{species}.dict'
+    conda:
+        'env/samtool.yaml'
+    shell:
+        "samtools faidx {input} ;picard CreateSequenceDictionary -R {input} -O {output}"
+
+rule blast_to_sam:
+    input:
+        ref='data/ref_{species}.dict',
+        files="mapped_reads/blast_{species}_{length}_{error_rate}_{param}.blastsam"
+    output:
+        "mapped_reads/blast_{species}_{length}_{error_rate}_{param}.sam"
+    conda:
+        'env/samtool.yaml'
+    shell:
+        """touch {{input.ref}};java -jar {path} {{input.files}} -r {{input.ref}} | iconv -f utf-8 -t utf-8 -c | awk -v ref=$(awk -F '\t' 'NR==2{{{{print substr($2,4)}}}}' {{input.ref}}) -F '\t' 'BEGIN{{{{OFS="\t"}}}} NF>10 {{{{$3=ref}}}} {{{{print}}}}'> {{output}}""".format(path=os.path.join(path_blast2sam,'blast2sam.jar')) 
+
+#-------------------------------build_file----------------------------------
+
+
+# rule all_ve:
+#     input:
+#         expand("result/pbsim2/{species}_{length}_{error_rate}_reads.fastq",species=config['species'],length=config['size'],error_rate=config['error_rate'])
+
+# rule nano:
+#     input:
+#         expand("result/nano/{species}_{length}_0_reads.fastq",species=['vih'],length=config['size'])
+
+# rule all_nano:
+#     input:
+#         expand("result/nano/{species}__{length}_0_reads.fastq",species=['vih'],length=config['size'],variant=config['variant']['number'])
+
+rule mvfiles:
+    input:
+        "result/pbsim2/{species}_{length}_{error_rate}_variantreads.fastq"
+    output:
+        "data/samples/{species}_{length}_{error_rate}_reads.fastq",
+        "data/perfect/{species}_{length}_{error_rate}_perfect.sam"
+    conda:
+        "envs/pyt.yaml"
+    script:
+        "script/moveclear.py"
+rule all_pb:
+    input:
+        expand("result/pbsim2/{species}_{length}_{error_rate}_variantreads.fastq",species=config['species'],length=config['length'],error_rate=config['error_rate'],variant=config['variant']['number'])
+
+
+rule build_readsvariant:
+    input:
+        expand("result/pbsim2/{{species}}_{variant}_{{length}}_{{error_rate}}_reads.fastq",variant=VARIANT),
+    output:
+        temp("result/pbsim2/{species}_{length}_{error_rate}_variantreads1.fastq")
+    conda:
+        "envs/pbsim.yaml"
+    script:
+        'script/buildvariant.py'
+
+
+rule add_human:
+    input:
+        human='data/supl/human_read.fastq',
+        data="result/pbsim2/{species}_{length}_{error_rate}_variantreads1.fastq",
+    output:
+       "result/pbsim2/{species}_{length}_{error_rate}_variantreads.fastq"
+    conda:
+        "envs/pyt.yaml"
+    script:
+        'script/select_human_pbsim.py'
+
+checkpoint build_variant: 
+    input:
+        ref="data/ref_{species}.fasta"
+    output:
+        expand('data/ref_{{species}}_{variant}.fasta',variant=VARIANT)
+    conda: 
+        "envs/pyt.yaml"
+    script:
+        'script/variant_maker.py'
+        
+#----------rule for pbsim-----------------
+rule simu_phase:
+    input:
+        ref="data/ref_{species}_{variant}.fasta",
+        model="data/supl/R103.model"
+    wildcard_constraints:
+        species="[a-z]*"
+    conda:
+        "envs/pbsim.yaml"
+    output:
+        temp("result/pbsim2/simu_{species}_{variant}_{length}_{error_rate}")#temp("simu_{species}")
+    params:
+        number=config['number'],
+        seed= config['seed'],
+        tsize='{length}',
+        er='{error_rate}'
+    shell:
+        "pbsim --depth {params.number} --prefix {output} --length-mean {params.tsize}  --length-sd 50  --accuracy-mean {params.er} --difference-ratio 23:31:46 --seed {params.seed} --hmm_model {input.model} {input.ref};touch {output}"
+
+
+
+rule convert_phase:
+    input:
+        "result/pbsim2/simu_{species}_{variant}_{length}_{error_rate}"
+    output:
+        temp("result/pbsim2/simulated_{species}_{variant}_{length}_{error_rate}")#temp("simu_{species}")
+    conda:
+        "envs/pyt.yaml"
+    script:
+        'script/convert_name.py'
+
+
+rule pre_perfect:
+    input:
+        data='result/pbsim2/simulated_{species}_{variant}_{length}_{error_rate}',
+        todel='result/pbsim2/simu_{species}_{variant}_{length}_{error_rate}'
+    output:
+        temp('result/pbsim2/simu_{species}_{variant}_{length}_{error_rate}_0001_corrected.maf')
+    conda:
+        'envs/pyt.yaml'
+    script:
+        'script/correct_sam.py'
+
+rule build_perfect:
+    input:
+        data='result/pbsim2/simulated_{species}_{variant}_{length}_{error_rate}',
+        cor='result/pbsim2/simu_{species}_{variant}_{length}_{error_rate}_0001_corrected.maf'
+    output:
+        'perfect_sam/{species}_{variant}_{length}_{error_rate}.sam'
+    conda:
+        'envs/last.yaml'
+    shell:
+        'maf-convert --dictionary -n sam {input.cor} > {output};'
+
+
+
+
+rule underscore:
+    input:
+        link="result/{tool}/simulated_{species}_{variant}_{length}_{error_rate}",
+    output:
+        temp("result/{tool}/{species}_{variant}_{length}_{error_rate}_reads1.fasta")
+    shell:
+        "sed -i -e 's/ //g' {input.link};sed -i -e 's/;/_/g' {input.link}> {output}"
+
+rule convert_header:
+    input:
+        link="result/{tool}/{species}_{variant}_{length}_{error_rate}_reads1.fasta",
+        read="result/{tool}/simulated_{species}_{variant}_{length}_{error_rate}",
+        samperfert='perfect_sam/{species}_{variant}_{length}_{error_rate}.sam',
+    output:
+        temp("result/{tool}/{species}_{variant}_{length}_{error_rate}_readsinco.fastq")
+    conda:
+        'envs/perl.yaml'
+    shell:
+        'script/convert1.pl {input.read} >{output}'
+        
+rule one_line:
+    input: 
+        "result/{tool}/{species}_{variant}_{length}_{error_rate}_readsinco.fastq"
+    output:
+        temp("result/{tool}/{species}_{variant}_{length}_{error_rate}_reads.fastq")
+    shell:
+        "cat {input}>{output}"
+        #"""awk '/^>/ {{printf("\\n%s\\n",$0);next; }} {{ printf("%s",$0);}}  END {{printf("\\n");}}' < {input} | tail -n +2 > {output}"""
+
+rule add_human2:
+    input:
+        human='data/supl/human_read.fastq',
+        data="result/pbsim2/{species}_{variant}_{length}_{error_rate}_reads.fastq",
+        todel='result/pbsim2/simu_{species}_{variant}_{length}_{error_rate}',
+        att= "result/pbsim2/{species}_{length}_{error_rate}_variantreads.fastq"
+        
+    output:
+       "result/pbsim2/{species}_{length}_{error_rate}_readshuman.fastq"
+    conda:
+        "envs/pyt.yaml"
+    script:
+        'script/select_human_pbsim.py'
+#----------rule for nanosim-----------------
+rule analyse_phase:
+    input:
+        ref="data/ref_{species}.fasta",
+        read="data/read_{species}.fastq"
+    conda:
+        "envs/nanosim.yaml"
+    output:
+        "result/nano/temp/simu_{species}"
+    shell:
+        "read_analysis.py genome -i {input.read} -rg {input.ref} -o {output} -t 24 ;touch {output}"
+
+
+rule simu_phase_nano:
+    input:
+        ref="data/ref_{species}.fasta",
+        folder="result/nano/temp/simu_{species}"
+    conda: 
+        "envs/nanosim.yaml"
+    output:
+       temp( "result/nano/simulated_{species}_{length}")
+    params:
+        number=autocoverage,
+        seed= config['seed'],
+        tsize='{length}'
+    shell:
+        "simulator.py genome -rg {input.ref} -c {input.folder} -o {output} -n {params.number} -max {params.tsize} -t 24 --seed {params.seed};touch {output}"
+
+rule add_human_nano:
+    input:
+        human='data/supl/human_read.fastq',
+        data='result/nano/simulated_{species}_{length}'
+    output:
+        temp("result/nano/mv_done_{species}_{length}_human")
+    conda:
+        "envs/pyt.yaml"
+    script:
+        'script/select_human_nanosim.py'
+
+rule rename_nano:
+    input:
+        tmp='result/nano/mv_done_{species}_{length}_human',
+    
+    output:
+        out1=temp("result/nano/done_{species}_{length}_0_human"),
+        out2=temp("result/nano/simulated_{species}_{length}_0")
+    shell:
+        "mv result/nano/simulated_{wildcards.species}_{wildcards.length}_aligned_reads.fastq {output.out2};touch {output.out1}"
+
+onsuccess:
+    shell('if [[ -d result/nano/temp ]]; then rm result/nano/temp -r ;fi')
+
+
 
 onsuccess:
     shell('if ls data/*.fasta.gmidx 2>/dev/null 1>&2;then rm data/*.fasta.gmidx ;fi;if [[ -d blastdb ]]; then rm blastdb -r ;fi')

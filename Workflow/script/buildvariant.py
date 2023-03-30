@@ -1,10 +1,10 @@
 import random
 
-def extract_param_out(outpath):
+def extract_param_out(outpath,param):
     rep=outpath.split('/')[2].split('_')
     size=extract_len_specie(rep[0])
     msize=rep[1]
-    return ((int(size)/int(msize)))
+    return ((int(size)/int(msize))*param['number'])
 
     
 
@@ -26,20 +26,23 @@ def attrib_percent(list):
 def extract_perfect(rname):
     return int(rname.split('_')[1].replace('S1N',''))
 def extract_name(rname):
-    return rname.split('_')[0].replace('>','')
+    return rname.split('_')[0].replace('@','')
 
 def extract_read(file,nbread,comb,pf):
     tableau=open(file,'r').readlines()
-    perfect_file=file.replace('result/pbsim2','perfect_sam').replace('_reads.fasta','.sam')
+    print(tableau)
+    perfect_file=file.replace('result/pbsim2','perfect_sam').replace('_reads.fastq','.sam')
     file2=open(perfect_file,'r').readlines()
-    print(int((len(tableau)-1)/2))
-    lst=random.sample(range(0, int(((len(tableau)-1)/2)-1000)), nbread)
+    print(len(tableau),((len(tableau)-1)/4),nbread)
+    lst=random.sample(range(0, int(((len(tableau)-1)/4))), nbread)
     for i in lst:
         
-        name=tableau[(i*2)]
-        pf+=file2[extract_perfect(name)-1].replace('S1_',extract_name(name)+'S1_')
+        name=tableau[(i*4)]
+        pf+=file2[extract_perfect(name)-1].replace('S1_',extract_name(name)+'_S1N')
         comb+=(name)
-        comb+=(tableau[(i*2+1)])
+        comb+=(tableau[(i*4+1)])
+        comb+=(tableau[(i*4+2)])
+        comb+=(tableau[(i*4+3)])
     return comb,pf
 
 def do_something(data_path, out_path,param):
@@ -51,18 +54,19 @@ def do_something(data_path, out_path,param):
     :type out_path: string
     """
     comb=open(out_path[0],'a')
-    combpf=open(out_path[0].replace('variantreads.fasta','perfect.sam'),'a')
+    combpf=open(out_path[0].replace('variantreads1.fastq','perfect.sam'),'a')
     taux=attrib_percent(param['variant']['taux'])
-    nb=extract_param_out(out_path[0])
+    nb=extract_param_out(out_path[0],param)
     res=''
     pf=''
     for inp in range(len(data_path)):
-        res,pf=extract_read(data_path[inp],int(taux[inp]*(nb/10)),res,pf)
+        res,pf=extract_read(data_path[inp],int(taux[inp]*(nb/100)),res,pf)
     comb.write(res)
     combpf.write(pf)
     comb.close()
     combpf.close()
 
 do_something(snakemake.input,snakemake.output,snakemake.config)
+
 
 

@@ -32,7 +32,7 @@ ruleorder: add_human > convert_header
 
 rule all:
     input:
-        expand("result/pbsim2/{species}_{msize}_{error_rate}_variantreads.fasta",species=config['species'],msize=config['size'],error_rate=config['error_rate'],variant=config['variant']['number'])
+        expand("result/pbsim2/{species}_{msize}_{error_rate}_variantreads.fasta",species=config['species'],msize=config['length'],error_rate=config['error_rate'],variant=config['variant']['number'])
 
 
 rule build_readsvariant:

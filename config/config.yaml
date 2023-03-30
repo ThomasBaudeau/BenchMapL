@@ -1,10 +1,11 @@
-length: [350]
-species: ['vih']
-error_rate: ['0.9']
+length: [5000,4000]
+species: ['vih','covid']
+error_rate: ['0.95','0.80']
+model: 'r103'
 param:
   minimap2: {
     name: ['default','C1','C2','C3*','C4','C5','C6'],
-    command: ['#','-k#12','-k#10','-k#8#-w#1','-w#10','-w#5','-w#1']}
+    command: ['#','-k#12','-k#10','-k#8#-w#1','-w#10','-w#5','-w#1',-k#5#-w#10]}
   #mm2f: {
     #name: ['default','C1','C2','C3*','C4','C5','C6'],
     #command: ['#','-k#12','-k#10','-k#8#-w#1','-w#10','-w#5','-w#1']}
@@ -28,10 +29,29 @@ param:
     command: ['#','-W#10#-F#5000','-W#15#-F#5000','-W#10#-F#10000','-W#10#-F#500','-W#15#-F#500','-W#12#-F#3000']}
   minimapos: {
     name: ['default*','H1','H2','H3','H4','H5','H6'],
-    command: ['--syncs#11#--synct#3','-W#10#-F#5000','-W#15#-F#5000','-W#10#-F#10000','-W#10#-F#500','-W#15#-F#500','-W#12#-F#3000']}
+    command: ['--syncs#11#--synct#3']}
   syncminimap: {
     name: ['default*','I1','I2','I3','I4','I5','I6'],
-    command: ['-k#15#-w#50#--downsample#1.23#--s-mer#5#--pos1#0#--pos2#10','-k#15#-w#0#--downsample#1.23#--s-mer#5#--pos1#0#--pos2#10','-W#15#-F#5000','-W#10#-F#10000','-W#10#-F#500','-W#15#-F#500','-W#12#-F#3000']}
+    command: ['-k#15#-w#50#--downsample#1.23#--s-mer#5#--pos1#0#--pos2#10']}
   blend: {
     name: ['default*','J1','J2','J3','J4','J5','J6'],
-    command: ['#','-k7 -w10 --fixed-bits=32 --neighbors=11','-W#15#-F#5000','-W#10#-F#10000','-W#10#-F#500','-W#15#-F#500','-W#12#-F#3000']}
+    command: ['#']}
+  bwamem: {
+    name: ['default*','J1','J2','J3','J4','J5','J6'],
+    command: ['#','-k#7#-W#10','-k#5#-w#1']}
+  # bowtie2: {
+  #   name: ['default*','J1','J2','J3','J4','J5','J6'],
+  #   command: ['#','-k#7#-W#10','-k#5#-w#1']}
+  # blast: {
+  #   name: ['default*','F1','F2','F3','F4','F5','F6'],
+  #   command: ['-max§target§seqs#1000000#-outfmt#5']}
+contamination: 20 #20% de read humain
+seed : 12345
+species: ['vih']
+number : 5
+variant: { 
+  number: 1,
+  specify: [1],
+  taux: [90]}
+#for specifie type of snp {'i':['0r'],'d':['0r'],'s':['1r']} else type 
+#number variant will be number/1000 variation

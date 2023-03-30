@@ -6,8 +6,8 @@ use strict;
 use Bio::Perl;
 use Getopt::Long;
 
-my $inFile  = Bio::SeqIO->new(-file => $ARGV[0], '-format' => 'Fasta');
-my $outFile  = Bio::SeqIO->new(-fh => \*STDOUT, '-format' => 'Fasta');
+my $inFile  = Bio::SeqIO->new(-file => $ARGV[0], '-format' => 'Fastq');
+my $outFile  = Bio::SeqIO->new(-fh => \*STDOUT, '-format' => 'Fastq');
 my $id = 0;
 
 while(my $seq  = $inFile->next_seq())
