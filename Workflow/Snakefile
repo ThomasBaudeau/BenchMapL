@@ -617,7 +617,8 @@ rule blast_to_sam:
 
 rule mvfiles:
     input:
-        "result/pbsim2/{species}_{length}_{error_rate}_variantreads.fastq"
+        a="result/pbsim2/{species}_{length}_{error_rate}_variantreads.fastq"
+        b= "data/{species}_variant_file.txt"
     output:
         "data/samples/{species}_{length}_{error_rate}_reads.fastq",
         "data/perfect/{species}_{length}_{error_rate}_perfect.sam"
