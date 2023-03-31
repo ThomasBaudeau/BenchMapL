@@ -618,14 +618,15 @@ rule blast_to_sam:
 rule mvfiles:
     input:
         a="result/pbsim2/{species}_{length}_{error_rate}_variantreads.fastq",
-        b= "data/{species}_variant_file.txt"
+        b= "data/{species}_variant_file.txt",
+        c="result/pbsim2/{species}_{length}_{error_rate}_perfect.sam",
     output:
-        "data/samples/{species}_{length}_{error_rate}_reads.fastq",
-        "data/perfect/{species}_{length}_{error_rate}_perfect.sam"
-    conda:
-        "envs/pyt.yaml"
-    script:
-        "script/moveclear.py"
+        a="data/samples/{species}_{length}_{error_rate}_reads.fastq",
+        b="data/perfect/{species}_{length}_{error_rate}_perfect.sam"
+    shell:
+        "mv {input.a} {output.a};mv {input.c} {output.b}"
+
+
 rule all_pb:
     input:
         expand("result/pbsim2/{species}_{length}_{error_rate}_variantreads.fastq",species=config['species'],length=config['length'],error_rate=config['error_rate'],variant=config['variant']['number'])
@@ -635,7 +636,8 @@ rule build_readsvariant:
     input:
         expand("result/pbsim2/{{species}}_{variant}_{{length}}_{{error_rate}}_reads.fastq",variant=VARIANT),
     output:
-        temp("result/pbsim2/{species}_{length}_{error_rate}_variantreads1.fastq")
+        a="result/pbsim2/{species}_{length}_{error_rate}_variantreads1.fastq",
+        b="result/pbsim2/{species}_{length}_{error_rate}_perfect.sam"
     conda:
         "envs/pbsim.yaml"
     script:
@@ -653,7 +655,7 @@ rule add_human:
     script:
         'script/select_human_pbsim.py'
 
-checkpoint build_variant: 
+rule build_variant: 
     input:
         ref="data/ref_{species}.fasta"
     output:
@@ -667,9 +669,9 @@ rule varfile:
     input:
         expand('data/ref_{{species}}_{variant}.fasta',variant=VARIANT)
     output:
-        "data/{species}_variant_file.txt"
+        a="data/{species}_variant_file.txt"
     shell:
-        "mv {wilcards.species}_variant_file.txt {output}"
+        "mv {wildcards.species}_variant_file.txt {output}"
     
 
         
@@ -690,7 +692,7 @@ rule simu_phase:
         tsize='{length}',
         er='{error_rate}'
     shell:
-        "pbsim --depth {params.number} --prefix {output} --length-mean {params.tsize}  --length-sd 50  --accuracy-mean {params.er} --difference-ratio 23:31:46 --seed {params.seed} --hmm_model {input.model} {input.ref};touch {output}"
+        "pbsim --depth {params.number} --prefix {output} --length-mean {params.tsize} --accuracy-mean {params.er} --difference-ratio 23:31:46 --seed {params.seed} --hmm_model {input.model} {input.ref};touch {output}"
 
 
 
@@ -708,7 +710,8 @@ rule convert_phase:
 rule pre_perfect:
     input:
         data='result/pbsim2/simulated_{species}_{variant}_{length}_{error_rate}',
-        todel='result/pbsim2/simu_{species}_{variant}_{length}_{error_rate}'
+        todel='result/pbsim2/simu_{species}_{variant}_{length}_{error_rate}',
+        vfile='data/{species}_variant_file.txt'
     output:
         temp('result/pbsim2/simu_{species}_{variant}_{length}_{error_rate}_0001_corrected.maf')
     conda:

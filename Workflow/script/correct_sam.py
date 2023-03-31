@@ -217,7 +217,7 @@ def count_pos():
     pass
 
 def do_something(filein, fileout):
-    cor_sam(filein[1]+'_0001.maf','variant_file.txt',fileout[0])
+    cor_sam(filein[1]+'_0001.maf',filein[2],fileout[0])
    
 
 

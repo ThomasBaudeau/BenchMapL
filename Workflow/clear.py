@@ -48,6 +48,14 @@ try:
     shutil.rmtree('data/perfect')
 except:
     pass
+
+for f in glob.glob("data/*.fasta.*"):
+    os.remove(f)
+
+for f in glob.glob("data/*variant_file.*"):
+    os.remove(f)
+
+
 for f in glob.glob('data/*.fai'):
     os.remove(f)
 for f in glob.glob('data/ref_*_*'):

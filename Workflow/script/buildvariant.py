@@ -34,6 +34,8 @@ def extract_read(file,nbread,comb,pf):
     perfect_file=file.replace('result/pbsim2','perfect_sam').replace('_reads.fastq','.sam')
     file2=open(perfect_file,'r').readlines()
     print(len(tableau),((len(tableau)-1)/4),nbread)
+    while (((len(tableau)-1)/4)<nbread):
+        nbread-=5
     lst=random.sample(range(0, int(((len(tableau)-1)/4))), nbread)
     for i in lst:
         
@@ -54,7 +56,7 @@ def do_something(data_path, out_path,param):
     :type out_path: string
     """
     comb=open(out_path[0],'a')
-    combpf=open(out_path[0].replace('variantreads1.fastq','perfect.sam'),'a')
+    combpf=open(out_path[1],'a')
     taux=attrib_percent(param['variant']['taux'])
     nb=extract_param_out(out_path[0],param)
     res=''
