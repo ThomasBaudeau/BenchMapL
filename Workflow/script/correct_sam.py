@@ -49,8 +49,9 @@ def correct_inter(inter):
     
 
 def cor_sam(file,varfile,outfile):
-
-        
+    print(file)
+    print(varfile)
+    print(outfile)    
     sam=open(file,'r').readlines()
     dic=find_variant(varfile)
     n_sam=open(outfile,'w')

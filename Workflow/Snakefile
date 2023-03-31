@@ -198,7 +198,7 @@ rule medaka_concensus:
     conda:
         'env/medaka.yaml'
     shell:
-        "medaka consensus {input.read} {output} --model {input.model} --batch_size 100 --threads 1"
+        "touch {output}"#"medaka consensus {input.read} {output} --model {input.model} --batch_size 100 --threads 1"
 
 rule perfect_samtobam:
     input:
@@ -229,7 +229,7 @@ rule medaka_variant:
     conda:
         'env/medaka.yaml'
     shell:
-        "medaka variant {input.ref} {input.consensus} {output}"
+        "touch {output}"#"medaka variant {input.ref} {input.consensus} {output}"
 
 rule plot_default_command:
     input:
@@ -713,7 +713,7 @@ rule pre_perfect:
         todel='result/pbsim2/simu_{species}_{variant}_{length}_{error_rate}',
         vfile='data/{species}_variant_file.txt'
     output:
-        temp('result/pbsim2/simu_{species}_{variant}_{length}_{error_rate}_0001_corrected.maf')
+        'result/pbsim2/simu_{species}_{variant}_{length}_{error_rate}_0001_corrected.maf'
     conda:
         'envs/pyt.yaml'
     script:

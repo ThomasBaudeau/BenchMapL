@@ -47,7 +47,7 @@ param:
   #   command: ['-max§target§seqs#1000000#-outfmt#5']}
 contamination: 20 #20% de read humain
 seed : 12345
-species: ['vih']
+
 number : 5
 variant: { 
   number: 1,

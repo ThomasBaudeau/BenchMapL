@@ -569,6 +569,19 @@ def findname(path):
     two=(path.index('_',one))
     return path[one+1:two]           
 
+def findspecies(path):
+    """find the name of the tool
+
+    :param path: a path
+    :type path: string
+    :return: the string between the / and _ character
+    :rtype: string
+    """
+    
+    return path.split('_')[1]   
+
+
+
 def group_input_simple(files,myparam):
     """generate a dict for each group of tools/datasets
 
@@ -689,7 +702,7 @@ def files_stats(data_path, out_path, myparam):
         bamFP = pysam.AlignmentFile(file.replace('medaka','mapped_reads').replace('.vcf','.bam'), "rb")
         pysam.set_verbosity(save)
         resu=countdiff(bamFP)
-        resu2=parsevariant(file,parseresuvar())
+        resu2=parsevariant(file,parseresuvar(findspecies(file)))
         infos.update(mapped=resu.mapped,unmapped=resu.unmapped,wrongalign=resu.missaligned,r0=resu.cor,r5=resu.cor_5,r10=resu.cor_10,r20=resu.cor_20,TP=resu2.TP,FN=resu2.FN,FP=resu2.FP)
         if idx==0:
             df=pd.DataFrame(data=infos,index=[idx])
@@ -700,7 +713,7 @@ def files_stats(data_path, out_path, myparam):
     
 
 def parseresuvar(file=''):
-    bcf_resu=open(file+'data/variant_file.txt','r')
+    bcf_resu=open('data/'+file+'_variant_file.txt','r')
     tab=bcf_resu.readlines()
     result={}
     for elem in tab:
