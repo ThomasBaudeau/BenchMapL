@@ -30,20 +30,22 @@ def extract_name(rname):
 
 def extract_read(file,nbread,comb,pf):
     tableau=open(file,'r').readlines()
-    print(tableau)
     perfect_file=file.replace('result/pbsim2','perfect_sam').replace('_reads.fastq','.sam')
     file2=open(perfect_file,'r').readlines()
     if pf=='':
         pf+=file2[0]
         pf+=file2[1]
     file2=file2[2:]
-    print(len(tableau),((len(tableau)-1)/4),nbread)
     while (((len(tableau)-1)/4)<nbread):
         nbread-=5
-    lst=random.sample(range(0, int(((len(tableau)-1)/4))), nbread)
+    lst = random.sample(range(0, int(((len(tableau))/4)-1)), nbread)
     for i in lst:
         
         name=tableau[(i*4)]
+        print(name,'name')
+        print(extract_perfect(name)-1,'pos')
+        print(len(file2),'len')
+        print(perfect_file)
         pf+=file2[extract_perfect(name)-1].replace('S1_',extract_name(name)+'_S1N')
         comb+=(name)
         comb+=(tableau[(i*4+1)])

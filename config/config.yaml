@@ -27,15 +27,15 @@ param:
   lra: {
     name: ['default','E1','E2*','E3','E4','E5','E6'],
     command: ['#','-W#10#-F#5000','-W#15#-F#5000','-W#10#-F#10000','-W#10#-F#500','-W#15#-F#500','-W#12#-F#3000']}
-  minimapos: {
-    name: ['default*','H1','H2','H3','H4','H5','H6'],
-    command: ['--syncs#11#--synct#3']}
-  syncminimap: {
-    name: ['default*','I1','I2','I3','I4','I5','I6'],
-    command: ['-k#15#-w#50#--downsample#1.23#--s-mer#5#--pos1#0#--pos2#10']}
-  blend: {
-    name: ['default*','J1','J2','J3','J4','J5','J6'],
-    command: ['#']}
+  # minimapos: {
+  #   name: ['default*','H1','H2','H3','H4','H5','H6'],
+  #   command: ['--syncs#11#--synct#3']}
+  # syncminimap: {
+  #   name: ['default*','I1','I2','I3','I4','I5','I6'],
+  #   command: ['-k#15#-w#50#--downsample#1.23#--s-mer#5#--pos1#0#--pos2#10']}
+  # blend: {
+  #   name: ['default*','J1','J2','J3','J4','J5','J6'],
+  #   command: ['#']}
   bwamem: {
     name: ['default*','J1','J2','J3','J4','J5','J6'],
     command: ['#','-k#7#-W#10','-k#5#-w#1']}

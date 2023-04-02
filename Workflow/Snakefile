@@ -7,10 +7,9 @@ def autocoverage(wildcards):
 
 def variant(wildcards):
     species=config['species']
-    var=['WT']
-    for j in species:
-        for i in range(config['variant']['number']):
-            var.append('V'+str(i)+j)
+    var=['WT'] 
+    for i in range(config['variant']['number']):
+        var.append('V'+str(i))
     return var
 
 VARIANT=variant(config)
@@ -133,8 +132,16 @@ def all_sample_best_medaka(wildcards):
                         ret.append('medaka/perfect_{species}_{alength}_{error_rate}_perfect.vcf'.format(species=specie,alength=str(length),error_rate=er)) 
     return ret
 
+def getparamk(wildcards):
+    temp = wildcards.param.split("#")
+    for x,i in enumerate(temp):
+        if i =="-k":
+            return temp[x+1]
+    return '15'
+
+
 def getparam(wildcards):
-    return wildcards.param.replace("#",' ').replace('§','_')
+    return wildcards.param.replace("#", ' ').replace('§', '_')
 
 rule run_var:
     input:
@@ -203,14 +210,14 @@ rule medaka_concensus:
 rule perfect_samtobam:
     input:
         ref='data/ref_{species}.fasta',
-        psam="data/perfect/{species}_{length}_{error_rate}_perfect.sam"
+        psam="data/perfect/{species}_{length}_{error_rate}_perfect.sam",
+        fai = 'data/ref_{species}.fasta.fai'
     output:
         pbam="mapped_reads/perfect_{species}_{length}_{error_rate}_perfect.bam"
     conda:
         "env/samtool.yaml"
     shell:
-        """samtools faidx {input.ref};
-        samtools view -bt {input.ref}.fai {input.psam}>mapped_reads/y.bam;
+        """samtools view -bt {input.fai} {input.psam}>mapped_reads/y.bam;
         samtools sort -n mapped_reads/y.bam -o mapped_reads/yt.bam;
         samtools fixmate mapped_reads/yt.bam mapped_reads/ok.bam;
         samtools sort mapped_reads/ok.bam -o {output.pbam}
@@ -218,6 +225,16 @@ rule perfect_samtobam:
         rm mapped_reads/y.bam;
         rm mapped_reads/yt.bam;
         rm mapped_reads/ok.bam"""
+
+rule make_faidx:
+    input:
+        ref = 'data/ref_{species}.fasta',
+    output:
+        'data/ref_{species}.fasta.fai'
+    conda:
+        "env/samtool.yaml"
+    shell:
+        'samtools faidx {input.ref};'
 
 rule medaka_variant:
     input:
@@ -422,7 +439,7 @@ rule blasr_temp:
 rule blasr:
     input:
         sam="mapped_reads/blasr_{species}_{length}_{error_rate}_{param}_temp.sam",
-        unmap=temp("temp_{species}_{length}_{error_rate}_{param}.txt")
+        unmap="temp_{species}_{length}_{error_rate}_{param}.txt"
     output:
         "mapped_reads/blasr_{species}_{length}_{error_rate}_{param}.sam"
     shell:
@@ -438,7 +455,7 @@ rule winnowmap:
     input:
         ref= 'data/ref_{species}.fasta',
         reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq',
-        meril='repetitive{species}_k10.txt',
+        meril = 'repetitive{species}_{param}.txt', 
     output:
         "mapped_reads/winnowmap2_{species}_{length}_{error_rate}_{param}.sam"
     conda:
@@ -452,13 +469,15 @@ rule winnowmap:
 
 rule pre_winnowmap_1:
     input:
-        ref= 'data/ref_{species}.fasta',
+        ref='data/ref_{species}.fasta',
     output:
-       'repetitive{species}_k10.txt'
+       temp('repetitive{species}_{param}.txt'),
+    params:
+        getparamk
     conda:
         "env/winnowmap.yaml"
     shell:
-       """meryl count memory=4 threads=2 k=10 output DB1 {input.ref};
+       """meryl count memory=4 threads=2 k={params} output DB1 {input.ref};
         meryl print greater-than distinct=0.9998 DB1 > {output};
         rm -r DB1"""
 
@@ -501,67 +520,67 @@ rule lra:
     shell:
         "lra index -ONT {params} {input.ref};lra align -ONT -t 4 -a {input.ref} {input.reads}  -p s > {output};rm {input.ref}.gli;rm {input.ref}.mmi"
 
-rule all_minimapos:
-    input:
-        expand("mapped_reads/minimapos_{species}_{length}_{error_rate}_{param}.sam", species=config['species'],length=config['length'],param=config['param']['minimapos']['command'],error_rate=config['error_rate'])
+# rule all_minimapos:
+#     input:
+#         expand("mapped_reads/minimapos_{species}_{length}_{error_rate}_{param}.sam", species=config['species'],length=config['length'],param=config['param']['minimapos']['command'],error_rate=config['error_rate'])
 
-rule minimapos:
-    input:
-        ref='data/ref_{species}.fasta',
-        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq'
-    output:
-        "mapped_reads/minimapos_{species}_{length}_{error_rate}_{param}.sam"
-    conda:
-        "env/minimap2.yaml"
-    params:
-        getparam
-    benchmark:
-        "benchmarks/minimapos_{species}_{length}_{error_rate}_{param}.benchmark.txt"
-    shell:
-        "{path} -ax map-ont {{params}} {{input.ref}} {{input.reads}} > {{output}}".format(path=os.path.join(path_os_minimap,'minimap2'))
+# rule minimapos:
+#     input:
+#         ref='data/ref_{species}.fasta',
+#         reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq'
+#     output:
+#         "mapped_reads/minimapos_{species}_{length}_{error_rate}_{param}.sam"
+#     conda:
+#         "env/minimap2.yaml"
+#     params:
+#         getparam
+#     benchmark:
+#         "benchmarks/minimapos_{species}_{length}_{error_rate}_{param}.benchmark.txt"
+#     shell:
+#         "{path} -ax map-ont {{params}} {{input.ref}} {{input.reads}} > {{output}}".format(path=os.path.join(path_os_minimap,'minimap2'))
 
-rule all_syncminimap:
-    input:
-        expand("mapped_reads/syncminimap_{species}_{length}_{error_rate}_{param}.sam", species=config['species'],length=config['length'],param=config['param']['syncminimap']['command'],error_rate=config['error_rate'])
+# rule all_syncminimap:
+#     input:
+#         expand("mapped_reads/syncminimap_{species}_{length}_{error_rate}_{param}.sam", species=config['species'],length=config['length'],param=config['param']['syncminimap']['command'],error_rate=config['error_rate'])
 
-rule syncminimap:
-    input:
-        ref='data/ref_{species}.fasta',
-        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq'
-    output:
-        "mapped_reads/syncminimap_{species}_{length}_{error_rate}_{param}.sam"
-    conda:
-        "env/minimap2.yaml"
-    params:
-        getparam
-    benchmark:
-        "benchmarks/syncminimap_{species}_{length}_{error_rate}_{param}.benchmark.txt"
-    shell:
-        "{path} -ax map-ont {{params}} {{input.ref}} {{input.reads}} > {{output}}".format(path=os.path.join(path_sync_minimap,'minimap2'))
+# rule syncminimap:
+#     input:
+#         ref='data/ref_{species}.fasta',
+#         reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq'
+#     output:
+#         "mapped_reads/syncminimap_{species}_{length}_{error_rate}_{param}.sam"
+#     conda:
+#         "env/minimap2.yaml"
+#     params:
+#         getparam
+#     benchmark:
+#         "benchmarks/syncminimap_{species}_{length}_{error_rate}_{param}.benchmark.txt"
+#     shell:
+#         "{path} -ax map-ont {{params}} {{input.ref}} {{input.reads}} > {{output}}".format(path=os.path.join(path_sync_minimap,'minimap2'))
 
-rule all_blend:
-    input:
-        expand("mapped_reads/blend_{species}_{length}_{error_rate}_{param}.sam", species=config['species'],length=config['length'],param=config['param']['blend']['command'],error_rate=config['error_rate'])
+# rule all_blend:
+#     input:
+#         expand("mapped_reads/blend_{species}_{length}_{error_rate}_{param}.sam", species=config['species'],length=config['length'],param=config['param']['blend']['command'],error_rate=config['error_rate'])
 
-rule blend:
-    input:
-        ref='data/ref_{species}.fasta',
-        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq'
-    output:
-        "mapped_reads/blend_{species}_{length}_{error_rate}_{param}.sam"
-    conda:
-        "env/minimap2.yaml"
-    params:
-        getparam
-    benchmark:
-        "benchmarks/blend_{species}_{length}_{error_rate}_{param}.benchmark.txt"
-    shell:
-        "{path} -ax map-ont {{params}} {{input.ref}} {{input.reads}} > {{output}}".format(path=os.path.join(path_blend,'blend'))
+# rule blend:
+#     input:
+#         ref='data/ref_{species}.fasta',
+#         reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq'
+#     output:
+#         "mapped_reads/blend_{species}_{length}_{error_rate}_{param}.sam"
+#     conda:
+#         "env/minimap2.yaml"
+#     params:
+#         getparam
+#     benchmark:
+#         "benchmarks/blend_{species}_{length}_{error_rate}_{param}.benchmark.txt"
+#     shell:
+#         "{path} -ax map-ont {{params}} {{input.ref}} {{input.reads}} > {{output}}".format(path=os.path.join(path_blend,'blend'))
 
 
-rule all_blast:
-    input:
-        expand("mapped_reads/blast_{species}_{length}_{error_rate}_{param}.sam",species=config['species'],length=config['length'],param=config['param']['magicblast']['command'],error_rate=config['error_rate'])
+# rule all_blast:
+#     input:
+#         expand("mapped_reads/blast_{species}_{length}_{error_rate}_{param}.sam",species=config['species'],length=config['length'],param=config['param']['magicblast']['command'],error_rate=config['error_rate'])
 
 
 # rule blast:
@@ -711,7 +730,8 @@ rule pre_perfect:
     input:
         data='result/pbsim2/simulated_{species}_{variant}_{length}_{error_rate}',
         todel='result/pbsim2/simu_{species}_{variant}_{length}_{error_rate}',
-        vfile='data/{species}_variant_file.txt'
+        vfile='data/{species}_variant_file.txt',
+        faidx='data/ref_{species}.fasta.fai'
     output:
         'result/pbsim2/simu_{species}_{variant}_{length}_{error_rate}_0001_corrected.maf'
     conda:
@@ -728,7 +748,7 @@ rule build_perfect:
     conda:
         'envs/last.yaml'
     shell:
-        'maf-convert --dictionary -n sam {input.cor} > {output};'
+        'maf-convert --dictionary sam {input.cor} > {output};'
 
 
 

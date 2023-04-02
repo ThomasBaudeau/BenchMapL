@@ -48,21 +48,18 @@ def correct_inter(inter):
     return lst
     
 
-def cor_sam(file,varfile,outfile):
-    print(file)
-    print(varfile)
-    print(outfile)    
-    sam=open(file,'r').readlines()
+def cor_sam(file,varfile,ffai,outfile):
+    header = open(ffai, 'r').readlines()[0].split('\t')[0]
+    sam = open(file, 'r').readlines()
     dic=find_variant(varfile)
     n_sam=open(outfile,'w')
-    if extract_spefile(file)=='WT':
-        header='AY772699.1'
+    if extract_spefile(file)[0:2]=='WT':
         for l in sam:
             n_sam.write(l.replace('ref',header))
         return
     for block in range(int(len(sam)/4)):
         if sam[4*block][0]=='a':
-            s1,s2=correct_ref(sam[4*block+1],sam[4*block+2],dic[extract_spefile(file)])
+            s1,s2=correct_ref(sam[4*block+1],sam[4*block+2],dic[extract_spefile(file)],header)
             n_sam.write('a\n')
             n_sam.write(s1+'\n')
             n_sam.write(s2+'\n\n')
@@ -70,8 +67,7 @@ def cor_sam(file,varfile,outfile):
     #os.remove(file)   
 
 
-def correct_ref(s1,s2,dic):
-    header='AY772699.1'
+def correct_ref(s1,s2,dic,header):
     tab=list(filter(None,s1.split(' ')))
     tab2=list(filter(None,s2.split(' ')))
     space=' '
@@ -194,7 +190,8 @@ def correct_seq(seq,pos,st_pos,inter,tup,rep,s2,first_inter):
     return res[:-1],s2        
 
 def extract_spefile(file):
-    return file.split('pbsim2')[1].split('_')[2]
+    temp = file.split('pbsim2')[1].split('_')[1:3]
+    return temp[1]+temp[0]
     
 def correct_s2(s2,posi):
     return s2[0:posi]+'-'+s2[posi:]
@@ -218,7 +215,7 @@ def count_pos():
     pass
 
 def do_something(filein, fileout):
-    cor_sam(filein[1]+'_0001.maf',filein[2],fileout[0])
+    cor_sam(filein[1]+'_0001.maf',filein[2],filein[3],fileout[0])
    
 
 
