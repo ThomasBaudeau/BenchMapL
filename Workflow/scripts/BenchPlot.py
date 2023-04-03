@@ -652,7 +652,7 @@ def parsevariant(file,resudic):
     posvar=len(resudic.keys())
     for rec in bcf_in.fetch():
         print(resudic,(int(rec.pos)+1))
-        if str((int(rec.pos)-1)) in resudic:
+        if (str((int(rec.pos)-1)) in resudic) or (str((int(rec.pos))) in resudic):
             resu.setTP()
             posvar-=1
         else :
@@ -702,8 +702,8 @@ def files_stats(data_path, out_path, myparam):
         bamFP = pysam.AlignmentFile(file.replace('medaka','mapped_reads').replace('.vcf','.bam'), "rb")
         pysam.set_verbosity(save)
         resu=countdiff(bamFP)
-        #resu2=parsevariant(file,parseresuvar(findspecies(file)))
-        infos.update(mapped=resu.mapped, unmapped=resu.unmapped, wrongalign=resu.missaligned, r0=resu.cor, r5=resu.cor_5, r10=resu.cor_10, r20=resu.cor_20)  # infos.update(mapped=resu.mapped,unmapped=resu.unmapped,wrongalign=resu.missaligned,r0=resu.cor,r5=resu.cor_5,r10=resu.cor_10,r20=resu.cor_20,TP=resu2.TP,FN=resu2.FN,FP=resu2.FP)
+        resu2=parsevariant(file,parseresuvar(findspecies(file)))
+        infos.update(mapped=resu.mapped,unmapped=resu.unmapped,wrongalign=resu.missaligned,r0=resu.cor,r5=resu.cor_5,r10=resu.cor_10,r20=resu.cor_20,TP=resu2.TP,FN=resu2.FN,FP=resu2.FP)
         if idx==0:
             df=pd.DataFrame(data=infos,index=[idx])
         else:

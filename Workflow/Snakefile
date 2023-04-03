@@ -205,7 +205,7 @@ rule medaka_concensus:
     conda:
         'env/medaka.yaml'
     shell:
-        "touch {output}"#"medaka consensus {input.read} {output} --model {input.model} --batch_size 100 --threads 1"
+        "medaka consensus {input.read} {output} --model {input.model} --batch_size 100 --threads 1"#"touch {output}"
 
 rule perfect_samtobam:
     input:
@@ -246,7 +246,7 @@ rule medaka_variant:
     conda:
         'env/medaka.yaml'
     shell:
-        "touch {output}"#"medaka variant {input.ref} {input.consensus} {output}"
+        "medaka variant {input.ref} {input.consensus} {output}"#"touch {output}"
 
 rule plot_default_command:
     input:
@@ -317,24 +317,24 @@ rule calcnbreads:
 
 
 
-rule all_bwamem:
-    input:
-        expand("mapped_reads/bwamem_{species}_{length}_{error_rate}_{param}.sam", species=config['species'],length=config['length'],param=config['param']['bwamem']['command'],error_rate=config['error_rate'])
+# rule all_bwamem:
+#     input:
+#         expand("mapped_reads/bwamem_{species}_{length}_{error_rate}_{param}.sam", species=config['species'],length=config['length'],param=config['param']['bwamem']['command'],error_rate=config['error_rate'])
 
-rule bwamem:
-    input:
-        ref='data/ref_{species}.fasta',
-        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq'
-    output:
-        "mapped_reads/bwamem_{species}_{length}_{error_rate}_{param}.sam"
-    conda:
-        "env/bwamem.yaml"
-    params:
-        getparam
-    benchmark:
-        "benchmarks/bwamem_{species}_{length}_{error_rate}_{param}.benchmark.txt"
-    shell:
-        "bwa index {input.ref} ;bwa mem -x ont2d {params} -t 2 {input.ref} {input.reads} > {output}"
+# rule bwamem:
+#     input:
+#         ref='data/ref_{species}.fasta',
+#         reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq'
+#     output:
+#         "mapped_reads/bwamem_{species}_{length}_{error_rate}_{param}.sam"
+#     conda:
+#         "env/bwamem.yaml"
+#     params:
+#         getparam
+#     benchmark:
+#         "benchmarks/bwamem_{species}_{length}_{error_rate}_{param}.benchmark.txt"
+#     shell:
+#         "bwa index {input.ref} ;bwa mem -x ont2d {params} -t 2 {input.ref} {input.reads} > {output}"
 
 
 
@@ -358,24 +358,24 @@ rule minimap2:
     shell:
         "minimap2 -ax map-ont {params} {input.ref} {input.reads} > {output}"
 
-rule all_graphmap2:
-    input:
-        expand("mapped_reads/graphmap2_{species}_{length}_{error_rate}_{param}.sam",species=config['species'],length=config['length'],param=config['param']['graphmap2']['command'],error_rate=config['error_rate'])
+# rule all_graphmap2:
+#     input:
+#         expand("mapped_reads/graphmap2_{species}_{length}_{error_rate}_{param}.sam",species=config['species'],length=config['length'],param=config['param']['graphmap2']['command'],error_rate=config['error_rate'])
 
-rule graphmap2:
-    input:
-        ref= 'data/ref_{species}.fasta',
-        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq'
-    output:
-        "mapped_reads/graphmap2_{species}_{length}_{error_rate}_{param}.sam"
-    conda:
-        "env/graphmap2.yaml"
-    params:
-        getparam
-    benchmark:
-        "benchmarks/graphmap2_{species}_{length}_{error_rate}_{param}.benchmark.txt"
-    shell:
-        "graphmap2 align --auto-rebuild-index -r {input.ref} -d {input.reads} {params} > {output}"
+# rule graphmap2:
+#     input:
+#         ref= 'data/ref_{species}.fasta',
+#         reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq'
+#     output:
+#         "mapped_reads/graphmap2_{species}_{length}_{error_rate}_{param}.sam"
+#     conda:
+#         "env/graphmap2.yaml"
+#     params:
+#         getparam
+#     benchmark:
+#         "benchmarks/graphmap2_{species}_{length}_{error_rate}_{param}.benchmark.txt"
+#     shell:
+#         "graphmap2 align --auto-rebuild-index -r {input.ref} -d {input.reads} {params} > {output}"
 
 
 rule all_graphmap:
@@ -446,79 +446,79 @@ rule blasr:
         """cat {input.sam}>{output};sed 's/>//' {input.unmap} | sed 's/$/\t4\t\*\t0\t0\t\*\t\*\t0\t0\t\*\t\*\trl:i:0/' >>{output}"""
 
 
-rule all_winnowmap:
-    input:
-        expand("mapped_reads/winnowmap2_{species}_{length}_{error_rate}_{param}.sam",species=config['species'],length=config['length'],param=config['param']['winnowmap2']['command'],error_rate=config['error_rate'])
+# rule all_winnowmap:
+#     input:
+#         expand("mapped_reads/winnowmap2_{species}_{length}_{error_rate}_{param}.sam",species=config['species'],length=config['length'],param=config['param']['winnowmap2']['command'],error_rate=config['error_rate'])
 
 
-rule winnowmap:
-    input:
-        ref= 'data/ref_{species}.fasta',
-        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq',
-        meril = 'repetitive{species}_{param}.txt', 
-    output:
-        "mapped_reads/winnowmap2_{species}_{length}_{error_rate}_{param}.sam"
-    conda:
-        "env/winnowmap.yaml"
-    params:
-        getparam
-    benchmark:
-        "benchmarks/winnowmap2_{species}_{length}_{error_rate}_{param}.benchmark.txt"
-    shell:
-        "winnowmap {params} -W {input.meril} -ax map-ont {input.ref} {input.reads} > {output}"
+# rule winnowmap:
+#     input:
+#         ref= 'data/ref_{species}.fasta',
+#         reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq',
+#         meril = 'repetitive{species}_{param}.txt', 
+#     output:
+#         "mapped_reads/winnowmap2_{species}_{length}_{error_rate}_{param}.sam"
+#     conda:
+#         "env/winnowmap.yaml"
+#     params:
+#         getparam
+#     benchmark:
+#         "benchmarks/winnowmap2_{species}_{length}_{error_rate}_{param}.benchmark.txt"
+#     shell:
+#         "winnowmap {params} -W {input.meril} -ax map-ont {input.ref} {input.reads} > {output}"
 
-rule pre_winnowmap_1:
-    input:
-        ref='data/ref_{species}.fasta',
-    output:
-       temp('repetitive{species}_{param}.txt'),
-    params:
-        getparamk
-    conda:
-        "env/winnowmap.yaml"
-    shell:
-       """meryl count memory=4 threads=2 k={params} output DB1 {input.ref};
-        meryl print greater-than distinct=0.9998 DB1 > {output};
-        rm -r DB1"""
+# rule pre_winnowmap_1:
+#     input:
+#         ref='data/ref_{species}.fasta',
+#     output:
+#        temp('repetitive{species}_{param}.txt'),
+#     params:
+#         getparamk
+#     conda:
+#         "env/winnowmap.yaml"
+#     shell:
+#        """meryl count memory=4 threads=2 k={params} output DB1 {input.ref};
+#         meryl print greater-than distinct=0.9998 DB1 > {output};
+#         rm -r DB1"""
 
-rule all_magicblast:
-    input:
-        expand("mapped_reads/magicblast_{species}_{length}_{error_rate}_{param}.sam",species=config['species'],length=config['length'],param=config['param']['magicblast']['command'],error_rate=config['error_rate'])
+# rule all_magicblast:
+#     input:
+#         expand("mapped_reads/magicblast_{species}_{length}_{error_rate}_{param}.sam",species=config['species'],length=config['length'],param=config['param']['magicblast']['command'],error_rate=config['error_rate'])
 
 
-rule magicblast:
-    input:
-        ref= 'data/ref_{species}.fasta',
-        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq',
-    output:
-        "mapped_reads/magicblast_{species}_{length}_{error_rate}_{param}.sam"
-    conda:
-        "env/magicblast.yaml"
-    params:
-        getparam
-    benchmark:
-        "benchmarks/magicblast_{species}_{length}_{error_rate}_{param}.benchmark.txt"
-    shell:
-        "makeblastdb -in {input.ref} -out blastdb/default -parse_seqids -dbtype nucl; magicblast -query {input.reads} -db blastdb/default -infmt fastq {params} -out {output};"
+# rule magicblast:
+#     input:
+#         ref= 'data/ref_{species}.fasta',
+#         reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq',
+#     output:
+#         "mapped_reads/magicblast_{species}_{length}_{error_rate}_{param}.sam"
+#     conda:
+#         "env/magicblast.yaml"
+#     params:
+#         getparam
+#     benchmark:
+#         "benchmarks/magicblast_{species}_{length}_{error_rate}_{param}.benchmark.txt"
+#     shell:
+#         "makeblastdb -in {input.ref} -out blastdb/default -parse_seqids -dbtype nucl; magicblast -query {input.reads} -db blastdb/default -infmt fastq {params} -out {output};"
 
-rule all_lra:
-    input:
-        expand("mapped_reads/magicblast_{species}_{length}_{error_rate}_{param}.sam",species=config['species'],length=config['length'],param=config['param']['lra']['command'],error_rate=config['error_rate'])
+# rule all_lra:
+#     input:
+#         expand("mapped_reads/magicblast_{species}_{length}_{error_rate}_{param}.sam",species=config['species'],length=config['length'],param=config['param']['lra']['command'],error_rate=config['error_rate'])
 
-rule lra:
-    input:
-        ref= 'data/ref_{species}.fasta',
-        reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq',
-    output:
-        "mapped_reads/lra_{species}_{length}_{error_rate}_{param}.sam"
-    conda:
-        "env/lra.yaml"
-    params:
-        getparam
-    benchmark:
-        "benchmarks/lra_{species}_{length}_{error_rate}_{param}.benchmark.txt"
-    shell:
-        "lra index -ONT {params} {input.ref};lra align -ONT -t 4 -a {input.ref} {input.reads}  -p s > {output};rm {input.ref}.gli;rm {input.ref}.mmi"
+# rule lra:
+#     input:
+#         ref= 'data/ref_{species}.fasta',
+#         reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq',
+#     output:
+#         "mapped_reads/lra_{species}_{length}_{error_rate}_{param}.sam"
+#     conda:
+#         "env/lra.yaml"
+#     params:
+#         getparam
+#     benchmark:
+#         "benchmarks/lra_{species}_{length}_{error_rate}_{param}.benchmark.txt"
+#     shell:
+#         "lra index -ONT {params} {input.ref};lra align -ONT -t 4 -a {input.ref} {input.reads}  -p s > {output};rm {input.ref}.gli;rm {input.ref}.mmi"
 
 # rule all_minimapos:
 #     input:
@@ -569,13 +569,13 @@ rule lra:
 #     output:
 #         "mapped_reads/blend_{species}_{length}_{error_rate}_{param}.sam"
 #     conda:
-#         "env/minimap2.yaml"
+#         "env/blend.yaml"
 #     params:
 #         getparam
 #     benchmark:
 #         "benchmarks/blend_{species}_{length}_{error_rate}_{param}.benchmark.txt"
 #     shell:
-#         "{path} -ax map-ont {{params}} {{input.ref}} {{input.reads}} > {{output}}".format(path=os.path.join(path_blend,'blend'))
+#         "blend -ax map-ont {params} {input.ref} {input.reads} > {output}"
 
 
 # rule all_blast:
