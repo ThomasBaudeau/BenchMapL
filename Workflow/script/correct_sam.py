@@ -71,14 +71,9 @@ def correct_ref(s1,s2,dic,header):
     tab=list(filter(None,s1.split(' ')))
     tab2=list(filter(None,s2.split(' ')))
     space=' '
-    if tab[2]=='2806':
-        pass
-    lst,stp_pos,first_inter=find_inter(int(tab[2]),int(tab[3]),dic)
-    
+    lst,stp_pos,first_inter=find_inter(int(tab[2]),int(tab[3]),dic) 
     rep =tab[6]
     rep2=tab2[6]
-    if stp_pos==2806:
-        pass
     if len(lst)>0:
         for pos in lst:
             rep,rep2=correct_seq(rep,int(pos[0]),stp_pos,int(pos[2]),pos[1],pos[3],rep2,first_inter)
