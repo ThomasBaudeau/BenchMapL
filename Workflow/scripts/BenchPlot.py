@@ -652,7 +652,7 @@ def parsevariant(file,resudic):
     posvar=len(resudic.keys())
     for rec in bcf_in.fetch():
         print(resudic,(int(rec.pos)+1))
-        if (str((int(rec.pos)-1)) in resudic) or (str((int(rec.pos))) in resudic):
+        if (str((int(rec.pos)-1)) in resudic) or (str((int(rec.pos))) in resudic) or (str((int(rec.pos)-2)) in resudic):
             resu.setTP()
             posvar-=1
         else :

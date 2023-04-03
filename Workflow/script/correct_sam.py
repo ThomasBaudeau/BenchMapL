@@ -14,6 +14,11 @@ def find_variant(file):
             if init:
                 linter=correct_inter(inter) 
                 vardict[nom]=[lenght,pos,type,linter,rep]
+                pos=[]
+                type=[]
+                rep=[]
+                linter=[]
+                inter=[]
             dsplit=lsplit[0].split('_')
             nom=dsplit[0]
             lenght=dsplit[1][:-2]
