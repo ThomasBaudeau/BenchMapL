@@ -4,9 +4,16 @@ bin-release/
 [Oo]bj/
 [Bb]in/
 Workflow/mapped_reads
+Workflow/results.csv
 Workflow/stat_tools
 Workflow/plots
-
+Workflow/medaka
+Workflow/result
+Workflow/perfect_sam
+Workflow/data/*_*.fasta.*
+Workflow/data/*_*_*.*
+Workflow/data/samples
+Workflow/data/perfect
 # Other files and folders
 .settings/
 .snakemake/

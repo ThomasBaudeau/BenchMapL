@@ -40,21 +40,21 @@ class result:
         """
         return 0 if self.mapped==0 else (cor/(self.mapped))*100
 
-    def mappercentU(self,nbreads):
+    def mappercentU(self):
         """return percent of unmapped reads
 
         :return: percent of unmapped reads
         :rtype: int
         """
-        return (((nbreads-1000)-self.mapped)/(nbreads-1000))*100
+        return ((self.unmapped)/(self.mapped+self.unmapped)*100)
 
-    def mappercentM(self,nbreads):
+    def mappercentM(self):
         """return percent of mapped reads
 
         :return: percent of mapped reads
         :rtype: int
         """
-        return (self.mapped/(nbreads-1000))*100
+        return ((self.mapped)/(self.mapped+self.unmapped)*100)
 
     def addGroup1(self,add):
         """add reads in group1 reads (unmapped reads)
@@ -268,7 +268,7 @@ def get_nbHuman(results):
         nb.append(result.missaligned)
     return nb
 
-def get_MapOrNot(results,nbreads):
+def get_MapOrNot(results):
     """return number of mapped and unmapped reads for each result of a groups
 
     :param results: list of resu object
@@ -279,8 +279,8 @@ def get_MapOrNot(results,nbreads):
     data_unmap=[]
     data_map=[]
     for result in results:
-        data_unmap.append(result.mappercentU(nbreads))
-        data_map.append(result.mappercentM(nbreads))
+        data_unmap.append(result.mappercentU())
+        data_map.append(result.mappercentM())
     return data_unmap,data_map
 
 def get_all_cor(results):
@@ -302,7 +302,7 @@ def get_all_cor(results):
         data_cor20.append(result.corpercent(result.cor_20))
     return [data_cor,data_cor5,data_cor10,data_cor20]
 
-def plot_histoMU(results,nbreads,output):
+def plot_histoMU(results,output):
     """plot histogram of unmapped /mapped reads 
 
     :param results: list of each resu of the groups
@@ -315,7 +315,7 @@ def plot_histoMU(results,nbreads,output):
         fig, ax = plt.subplots(figsize=(7, 7))
         plt.rcParams.update({'font.size': 11})
         labels=get_label(results)
-        d1,d2=get_MapOrNot(results,nbreads)
+        d1,d2=get_MapOrNot(results)
         ax.set_xticklabels(labels, rotation = 45)
         ax.bar(labels, d2, width, label='Mapped_reads')
         ax.bar(labels, d1, width, label='Unmapped_reads',bottom=d2)
@@ -501,7 +501,9 @@ def parsepath(path,myparam):
     command=asplit[5][:-4]
     tool=asplit[1][6:]
     for pos in range(len(rsnake(myparam,'param',tool,'command'))):
-        if rsnake(myparam,'param',tool,'command',pos)==command:  
+        
+        if rsnake(myparam,'param',tool,'command',pos)==command:
+
             return rsnake(myparam,'param',tool,'name',pos)
     raise ValueError("Wrong Input")
            
@@ -544,7 +546,6 @@ def plot_params(data_path, out_path, myparam):
         if find_output(key,outpath=out_path): 
             lst=groups[key]
             results=[]
-            nbreads=calcnbread(data_path[len(data_path)-1],key)
             for tool in lst:
                 save = pysam.set_verbosity(0)
                 bamFP = pysam.AlignmentFile(tool, "rb")
@@ -554,7 +555,7 @@ def plot_params(data_path, out_path, myparam):
                 resu.setname(name)
                 results.append(resu)
             multiple_cor(results,find_output(key,'bc2', out_path))    
-            plot_histoMU(results,nbreads,find_output(key,'bc1', out_path))
+            plot_histoMU(results,find_output(key,'bc1', out_path))
             common_error_gp2(results,find_output(key,'bc3', out_path))
 
 def findname(path):
@@ -619,7 +620,6 @@ def plot_simple(data_path, out_path, myparam,test=False):
         if find_output(key,outpath=out_path): 
             lst=groups[key]
             results=[]
-            nbreads=calcnbread(data_path[len(data_path)-1],key)
             for tool in lst:
                 save = pysam.set_verbosity(0)
                 bamFP = pysam.AlignmentFile(tool, "rb")
@@ -632,19 +632,10 @@ def plot_simple(data_path, out_path, myparam,test=False):
             common_error_gp1(results,find_output(key,'rl4', out_path))
             common_error_gp2(results,find_output(key,'rl5', out_path))
             multiple_cor(results,find_output(key,'rl2', out_path))    
-            plot_histoMU(results,nbreads,find_output(key,'rl1', out_path))
+            plot_histoMU(results,find_output(key,'rl1', out_path))
             plot_histoNotHuman(results,find_output(key,'rl3', out_path))
             if test:
                 return results
-
-
-
-
-def calcnbread(files,key):
-    pos=list(open(files).readlines())
-    for line in pos:
-        if key in line:
-            return int(line[line.index(':')+1:])  
 
 def parsevariant(file,resudic):
     resu=resu_bcf()
