@@ -3,7 +3,7 @@ Snakemake pipeline for compare multiple long read mappers on viruses dataset
 
 *<h2>Authors </h2>* 
 
-Students of the Bioinformatics Master of the University of Bordeaux 
+PhD Student, Lille University
 
 Thomas BAUDEAU – thomas.baudeau@etu.u-bordeaux.fr 
 
