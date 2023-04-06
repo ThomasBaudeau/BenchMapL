@@ -5,7 +5,7 @@ Snakemake pipeline for compare multiple long read mappers on viruses dataset
 
 PhD Student, Lille University
 
-Thomas BAUDEAU – thomas.baudeau@etu.u-bordeaux.fr 
+Thomas BAUDEAU – thomas.baudeau@univ-lille.fr
 
 <h2>Install </h2>*
 
