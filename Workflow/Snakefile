@@ -14,6 +14,11 @@ def variant(wildcards):
 
 VARIANT=variant(config)
 
+def lmin(wildcards):
+    return str(int(int(wildcards.length)*0.90))
+
+def lmax(wildcards):
+    return str(int(int(wildcards.length)*1.10))
 
 ruleorder: add_human > convert_header 
 
@@ -82,6 +87,26 @@ def all_sample_best(wildcards):
     return ret
 
 
+def all_reads2(wildcards):
+    ret=[]
+    a= expand( "mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.bam",zip,tool=TOOLS,allow_missing=True)
+    for elem in a:
+        for specie in config['species']:
+            for length in config['length']:
+                for er in config['error_rate']:
+                    for aparam in config['param'][elem[13:elem.find('_',7)]]['command']:
+                        b=elem.replace('{species}',specie)
+                        b=b.replace('{error_rate}',er)
+                        b=b.replace('{length}',str(length))
+                        b=b.replace('{param}',aparam)
+                        ret.append(b)
+    for specie in config['species']:
+            for length in config['length']:
+                for er in config['error_rate']:             
+                    ret.append('mapped_reads/perfect_{species}_{alength}_{error_rate}_perfect.bam'.format(species=specie,alength=str(length),error_rate=er))
+    return ret
+
+
 def all_reads(wildcards):
     ret=[]
     a= expand( "medaka/{tool}_{species}_{length}_{error_rate}_{param}.vcf",zip,tool=TOOLS,allow_missing=True)
@@ -100,8 +125,6 @@ def all_reads(wildcards):
                 for er in config['error_rate']:             
                     ret.append('medaka/perfect_{species}_{alength}_{error_rate}_perfect.vcf'.format(species=specie,alength=str(length),error_rate=er))
     return ret
-
-
 
 def all_sample_best_medaka(wildcards):
     ret=[]
@@ -143,7 +166,26 @@ rule run_default:
 
 rule run_params:
     input :
-       expand( "plots/params/{tool}/{tool}_{species}_{length}_{error_rate}_bc{num}.pdf",tool=TOOLS, species=config['species'],length=['5000','350'],num=['1','2','3'],error_rate=config['error_rate'])
+       expand( "plots/params/{tool}/{tool}_{species}_{length}_{error_rate}_bc{num}.pdf",tool=TOOLS, species=config['species'],length=['150','7500'],num=['1','2','3'],error_rate=config['error_rate'])
+
+
+rule run_meancor:
+    input :
+       expand( "plots/meancorflot/{tool}/{species}_{length}_{error_rate}_meancor.jpg",tool=TOOLS, species=config['species'],length=['150','7500'],error_rate=config['error_rate'])
+
+
+rule snake_over:
+    input: 
+        all_reads2
+    output:
+        'resultfinal/corcigaroverall.txt'
+    conda:
+        'env/cigcor.yaml'
+    script:
+        'scriptcigar/snake_over.py'
+
+
+    
 
 rule call_variants:
     input:
@@ -157,9 +199,40 @@ rule final_stat:
     input :
         all_stat_default
 
+
+def all_sample_best2(wildcards):
+    ret=[]
+    a= expand( "mapped_reads/{tool}_{{species}}_{{length}}_{{error_rate}}_{param}.bam",zip,tool=TOOLS, allow_missing=True)
+    for elem in a:
+        for i in range(len(config['param'][elem[13:elem.find('_',13)]]['command'])):
+                if '*' in config['param'][elem[13:elem.find('_',13)]]['name'][i]:
+                    b=elem.replace('{param}',config['param'][elem[13:elem.find('_',13)]]['command'][i])
+                    ret.append(b)
+    return ret
+
+def getdefaut(wildcards):
+    return config['param'][wildcards.tool]['command'][0]
+
+def exparam(wildcards):
+    return expand("mapped_reads/{{tool}}_{{species}}_{{length}}_{{error_rate}}_{param}.bam",param=config['param'][wildcards.tool]['command'])
+
+rule plot_meancor:
+    input:
+        a=exparam,
+        b="mapped_reads/perfect_{species}_{length}_{error_rate}_perfect.bam",
+    output:
+        "plots/meancorflot/{tool}/{species}_{length}_{error_rate}_meancor.jpg"
+    params:
+        default=getdefaut
+    conda:
+        'env/cigcor.yaml'
+    script:
+        'scriptcigar/snake_plot.py'
+
+
 rule plot_best_command:
     input:
-       all_sample_best
+       all_sample_best2
     output:
         "plots/best/{species}_{length}_{error_rate}_rl1.pdf",
         "plots/best/{species}_{length}_{error_rate}_rl2.pdf",
@@ -176,7 +249,7 @@ rule all_stats_csv:
     input:
         all_reads
     output:
-        'results.csv'
+        'resultfinal/results.csv'
     conda:
        "env/plotscript.yaml"
     script:
@@ -184,7 +257,7 @@ rule all_stats_csv:
 
 rule all:
     input:
-        'results.csv'
+        'resultfinal/results.csv','resultfinal/corcigaroverall.txt'
         
 rule medaka_concensus:
     input:
@@ -709,9 +782,11 @@ rule simu_phase:
         number=config['number'],
         seed= config['seed'],
         tsize='{length}',
-        er='{error_rate}'
+        er='{error_rate}',
+        tmin= lmin,
+        tmax= lmax
     shell:
-        "pbsim --depth {params.number} --prefix {output} --length-mean {params.tsize} --accuracy-mean {params.er} --difference-ratio 23:31:46 --seed {params.seed} --hmm_model {input.model} {input.ref};touch {output}"
+        "pbsim --depth {params.number} --prefix {output} --length-mean {params.tsize} --length-min {params.tmin} --length-max {params.tmax} --accuracy-mean {params.er} --difference-ratio 23:31:46 --seed {params.seed} --hmm_model {input.model} {input.ref};touch {output}"
 
 
 

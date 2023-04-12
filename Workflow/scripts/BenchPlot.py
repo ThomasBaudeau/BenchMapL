@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pysam
+import tqdm as tq
 
 
 class result:
@@ -407,7 +408,10 @@ def common_error_gp1(results,output):
         for read in results:
             gp1[read.name]=read.group1
         plot1=from_contents(gp1)
-        polt = UpSet(plot1,show_counts=True,element_size=21).plot()
+        try:
+            polt = UpSet(plot1,show_counts=True,element_size=21).plot()
+        except:
+            pass
         plt.title('Categories of unmapped reads among tools')
         plt.savefig(output,dpi=300,format='pdf')
 
@@ -642,7 +646,6 @@ def parsevariant(file,resudic):
     bcf_in=pysam.VariantFile(file)
     posvar=len(resudic.keys())
     for rec in bcf_in.fetch():
-        print(resudic,(int(rec.pos)+1))
         if (str((int(rec.pos)-1)) in resudic) or (str((int(rec.pos))) in resudic) or (str((int(rec.pos)-2)) in resudic):
             resu.setTP()
             posvar-=1
@@ -687,7 +690,8 @@ def files_stats(data_path, out_path, myparam):
     :type myparam: list
     """
     files=list(data_path)
-    for idx,file in enumerate(files):
+    idx=0
+    for file in tq.tqdm(files):
         infos=find_info (file,myparam)
         save = pysam.set_verbosity(0)
         bamFP = pysam.AlignmentFile(file.replace('medaka','mapped_reads').replace('.vcf','.bam'), "rb")
@@ -699,8 +703,9 @@ def files_stats(data_path, out_path, myparam):
             df=pd.DataFrame(data=infos,index=[idx])
         else:
             df2=pd.DataFrame(data=infos,index=[idx])
-            df=pd.concat([df,df2])   
-    df.to_csv('results.csv')
+            df=pd.concat([df,df2])
+        idx+=1  
+    df.to_csv(str(out_path))
     
 
 def parseresuvar(file=''):

@@ -29,15 +29,15 @@ param:
     command: ['#','-W#10#-F#5000','-W#15#-F#5000','-W#10#-F#10000','-W#10#-F#500','-W#15#-F#500','-W#12#-F#3000']}
   minimapos: {
     name: ['default*','H1','H2','H3','H4','H5','H6'],
-    command: ['--syncs#11#--synct#3']}
+    command: ['--syncs#11#--synct#3','--syncs#14#--synct#6','--syncs#5#--synct#3']}
   syncminimap: {
     name: ['default*','I1','I2','I3','I4','I5','I6'],
-    command: ['-k#15#-w#50#--downsample#1.23#--s-mer#5#--pos1#0#--pos2#10']}
+    command: ['-k#15#-w#50#--downsample#1.23#--s-mer#5#--pos1#0#--pos2#10','-k#15#-w#5#--downsample#1.23#--s-mer#5#--pos1#0#--pos2#5','-k#15#-w#2#--downsample#1.23#--s-mer#5#--pos1#0#--pos2#10']}
   blend: {
-    name: ['default*','J1','J2','J3','J4','J5','J6'],
+    name: ['default*','J1*','J2','J3','J4','J5','J6'],
     command: ['#','-k#5#-w#7#--fixed-bits=32#--neighbors=11','-k#15#-w#5#--fixed-bits=32#--neighbors=11']}
   bwamem: {
-    name: ['default*','J1','J2','J3','J4','J5','J6'],
+    name: ['default','J1*','J2','J3','J4','J5','J6'],
     command: ['#','-k#7#-W#10','-k#5#-w#1']}
   # bowtie2: {
   #   name: ['default*','J1','J2','J3','J4','J5','J6'],
@@ -48,7 +48,7 @@ param:
 contamination: 20 #20% de read humain
 seed : 12345
 
-number : 25
+number : 40
 variant: { 
   number: 1,
   specify: [1],

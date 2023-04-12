@@ -3,6 +3,7 @@ bin-debug/
 bin-release/
 [Oo]bj/
 [Bb]in/
+*/*/__pycache__
 Workflow/mapped_reads
 Workflow/results.csv
 Workflow/stat_tools
