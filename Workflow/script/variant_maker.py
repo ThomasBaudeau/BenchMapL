@@ -115,6 +115,7 @@ def do_something(data_path, out_path,param):
     :param out_path: snakemake.output
     :type out_path: string
     """
+    random.seed(int(param['seed']))
     wildtype=open(data_path[0],'r').readlines()
     spevariant=param['variant']['specify']
     resuvariant=open(data_path[0].split('_')[1].replace('.fasta','_')+'variant_file.txt','w')

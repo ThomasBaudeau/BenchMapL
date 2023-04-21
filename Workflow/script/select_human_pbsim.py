@@ -43,7 +43,7 @@ def do_something(data_path, out_path):
     :type out_path: string
     """
     
-    
+    random.seed(int(snakemake.config['seed']))
     seq,score=select_reads(len(list(openfile(snakemake.input[1])))/4)
     files1=open(snakemake.input[1],'a')
     val=3

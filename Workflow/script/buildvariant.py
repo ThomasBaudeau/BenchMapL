@@ -57,6 +57,7 @@ def do_something(data_path, out_path,param):
     :param out_path: snakemake.output
     :type out_path: string
     """
+    random.seed(int(param['seed']))
     comb=open(out_path[0],'a')
     combpf=open(out_path[1],'a')
     taux=attrib_percent(param['variant']['taux'])
