@@ -55,6 +55,5 @@ def do_something(data_path, out_path):
         files1.write('\n+\n'+score[i][0:int(snakemake.input[1].split('_')[val])]+'\n')
     files1.close()
     os.rename(snakemake.input[1],out_path)
-    print(files1)
 do_something(snakemake.input[0], snakemake.output[0])
 

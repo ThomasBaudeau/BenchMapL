@@ -42,10 +42,6 @@ def extract_read(file,nbread,comb,pf):
     for i in lst:
         
         name=tableau[(i*4)]
-        print(name,'name')
-        print(extract_perfect(name)-1,'pos')
-        print(len(file2),'len')
-        print(perfect_file)
         pf+=file2[extract_perfect(name)-1].replace('S1_',extract_name(name)+'_S1N')
         comb+=(name)
         comb+=(tableau[(i*4+1)])

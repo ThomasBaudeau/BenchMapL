@@ -1,6 +1,6 @@
-length: [2500,5000,7500,1000,500,150,350]
+length: [7500,150]
 species: ['vih',covid]
-error_rate: ['0.95','0.99','0.90','0.80']
+error_rate: ['0.99']
 model: 'r103'
 param:
   minimap2: {
@@ -48,10 +48,10 @@ param:
 contamination: 20 #20% de read humain
 seed : 12345
 
-number : 40
+number : 125
 variant: { 
-  number: 1,
-  specify: [1],
-  taux: [90]}
+  number: 2,
+  specify: [5,0.1],
+  taux: [45,45]}
 #for specifie type of snp {'i':['0r'],'d':['0r'],'s':['1r']} else type 
 #number variant will be number/1000 variation

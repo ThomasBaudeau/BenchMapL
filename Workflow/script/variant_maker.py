@@ -16,20 +16,35 @@ def makerandom(file,wt,datapath,variant,tx,fvar):
     lmut=[]
     #tirer au sort toute les mutations puis les appliquer dans l'ordre decroissant
     fvar.write('V'+str(variant-1)+find_species(datapath)+'_'+str(len(seq))+':\n')
-    for _ in range(calcnbmut(len(seq),(tx*1000))):
+    for pos in random.sample(range(0, len(seq)), calcnbmut(len(seq),tx)):
+        
         nbevent=random.randint(0,2)
         if nbevent==0:   
-            name=randominsert(seq, pos='random')
+            name=randominsert(seq, pos)
         if nbevent == 1:
-            name = randomdel(seq, pos='random')
+            name = randomdel(seq, pos)
         if nbevent == 2:
-            name = randomsub(seq, pos='random')
+            name = randomsub(seq, pos)
         lmut.append(name)
-    lmut=sorted(lmut,key=lambda ok : ok[1],reverse=True)
+    lmut=correct_mut(sorted(lmut,key=lambda ok : ok[1],reverse=True))
     makemute(file,seq,species,lmut,fvar)
 
     return 
 
+
+def correct_mut(lmut):
+    for x in range(len(lmut)-2):
+        a=lmut[x]
+        b=lmut[x+1]
+        if int(a[1])-1==int(b[1]):
+            if a[0]=='I' and b[0]=='D':
+                ori=a[2][1]
+                lmut[x]=('S',a[1],'({0},{1})'.format(ori,mutate(ori)))
+    return lmut
+
+
+def calcnbmut(ln,nb):
+    return int(ln*(nb/100))
 
 def makemute(file,seq,species,lmut,fvar):
     file.write(species)
@@ -44,8 +59,8 @@ def makemute(file,seq,species,lmut,fvar):
         fvar.write(tup[0]+'\t'+str(pos)+'\t'+tup[2]+'\n')
     file.write(seq)
     file.close()
-def calcnbmut(ln,nb):
-    return int(ln/nb)
+
+
 
 def randominsert(seq,pos='random'):
     if pos == 'random':

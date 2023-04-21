@@ -64,6 +64,9 @@ for f in glob.glob('data/ref_*_*'):
 for f in glob.glob('*_k10.txt'):
     os.remove(f)
 
+for f in glob.glob('repetitive*_-*.txt'):
+    os.remove(f)
+
 try:
    os.remove('result.csv')
 except:

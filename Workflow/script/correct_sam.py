@@ -51,7 +51,7 @@ def correct_inter(inter):
         lst.append(count)
     lst.reverse()
     return lst
-    
+
 
 def cor_sam(file,varfile,ffai,outfile):
     header = open(ffai, 'r').readlines()[0].split('\t')[0]
@@ -76,12 +76,17 @@ def correct_ref(s1,s2,dic,header):
     tab=list(filter(None,s1.split(' ')))
     tab2=list(filter(None,s2.split(' ')))
     space=' '
+    if tab2[1]=='S1_6904':
+        pass
     lst,stp_pos,first_inter=find_inter(int(tab[2]),int(tab[3]),dic) 
     rep =tab[6]
     rep2=tab2[6]
     if len(lst)>0:
         for pos in lst:
-            rep,rep2=correct_seq(rep,int(pos[0]),stp_pos,int(pos[2]),pos[1],pos[3],rep2,first_inter)
+            rep,rep2,cp=correct_seq(rep,int(pos[0]),stp_pos,int(pos[2]),pos[1],pos[3],rep2,first_inter)
+        if cp:
+            stp_pos+=1
+
         l_frag=int(tab[3])+(next_inter(lst[0])-lst[-1][2])
         if l_frag!=len(rep.replace('-','').replace('\n','')):
             print(l_frag,len(rep.replace('-','').replace('\n','')),tab[3],'\n',tab[2],lst)
@@ -119,13 +124,15 @@ def find_inter(a,b,dic):
     i=0
     stp_pos=10000000000000000
     first_inter=0
-    if a<int(dic[1][0])+prev_inter((0,dic[2][(0)],dic[3][(0)])):
+    if a+prev_inter((0,dic[2][(0)],dic[3][(0)]))<int(dic[1][0]):
         while(i <= len(dic[1])-1 and stp_pos==10000000000000000):
             if int(dic[1][-(i+1)])>a+prev_inter((0,dic[2][-(i+1)],dic[3][-(i+1)])):
                 stp_pos=a+prev_inter((0,dic[2][-(i+1)],dic[3][-(i+1)]))
                 elem=(0,dic[2][-(i+1)],dic[3][-(i+1)])
                 first_inter=prev_inter(elem)
             i+=1
+        if stp_pos==10000000000000000:
+            raise('error in start_position')
     else:
         stp_pos=a+dic[3][(0)]     
     for idx,p in enumerate(dic[1]):
@@ -142,10 +149,13 @@ def correct_seq(seq,pos,st_pos,inter,tup,rep,s2,first_inter):
     count=st_pos
     blocks=seq.replace('\n','').split('-')
     make=True
+    cp=False
+    cp2=False
     for idx,block in enumerate(blocks):
         count+=len(block)
         if count+(inter-first_inter)>pos and make:
-            
+            if pos==st_pos+1 and tup=='I':
+                cp=True
             count-=len(block)
             posi=(pos)-(count+(inter-first_inter))
             if tup=='I' :
@@ -186,8 +196,13 @@ def correct_seq(seq,pos,st_pos,inter,tup,rep,s2,first_inter):
     if make:
         raise NameError('one mutation did not be errased')
     if len(res[:-1])!=len(s2.replace('\n','')):
-        raise  NameError('s1 s2 different length',len(res[:-1]),len(s2.replace('\n',''))) 
-    return res[:-1],s2        
+        raise  NameError('s1 s2 different length',len(res[:-1]),len(s2.replace('\n','')))
+    if cp:
+        if seq[0]!='-' and res[0]=='-':          
+            cp2=True
+        elif seq[0]=='-'and res[0:2]=='--':
+            cp2=True
+    return res[:-1],s2,cp2        
 
 def extract_spefile(file):
     temp = file.split('pbsim2')[1].split('_')[1:3]
@@ -221,4 +236,4 @@ def do_something(filein, fileout):
 
 
 do_something(snakemake.input, snakemake.output) 
-#cor_sam('Workflow2/result/pbsim2/simu_vih_V0vih_350_0.9_0001.maf','Workflow2/variant_file.txt','Workflow2/result/pbsim2/simu_vih_V0vih_350_0.9_0001_corrected.maf')
+#cor_sam('Workflow/result/pbsim2/simu_covid_V0_150_0.99_0001.maf','Workflow/data/covid_variant_file.txt','Workflow/data/ref_covid.fasta.fai','Workflow/result/pbsim2/simu_covid_V0_150_0.99_0001_corrcted.maf')
