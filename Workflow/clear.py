@@ -1,8 +1,9 @@
 import os
 import shutil
 import glob
-
+print(os.getcwd())
 os.chdir('Workflow')
+print(os.getcwd())
 try:
     shutil.rmtree('result')
 except:

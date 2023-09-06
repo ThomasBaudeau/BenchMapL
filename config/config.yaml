@@ -1,6 +1,6 @@
-length: [7500,150]
-species: ['vih',covid]
-error_rate: ['0.99']
+length: [real]
+species: [covid]
+error_rate: [real]
 model: 'r103'
 param:
   minimap2: {
@@ -11,7 +11,7 @@ param:
     #command: ['#','-k#12','-k#10','-k#8#-w#1','-w#10','-w#5','-w#1']}
   graphmap2: {
     name: ['default','B1','B2*','B3'],
-    command: ['#','-a#sg','-a#sggotoh','-a#anchorgotoh']}
+    command: ['#','-a#anchorgotoh']} #'-a#sg','-a#sggotoh'
   graphmap: {
     name: ['default','A1','A2','A3','A4*','A5','A6'],
     command: ['#','-e#5','-e#4,2','-k#8','-k#4','-A#8','-A#16']}
@@ -20,7 +20,7 @@ param:
     command: ['#','--minMatch#10','--minMatch#9','--minMatch#8','--minMatch#7','--minMatch#6','--clipping#hard','--clipping#soft','--nCandidates#15','--nCandidates#20']}
   winnowmap2: {
     name: ['default*','D1','D2','D3','D4','D5','D6','D7'],
-    command: ['-k#10','-k#12','-k#10','-k#8','-w#25','-w#10','-w#5','-w#1']}
+    command: ['-k#10','-k#12','-k#10','-k#8','-w#25','-w#10','-w#5','-w#1','-k#8#-w#1']}
   magicblast: {
     name: ['default*','F1','F2','F3','F4','F5','F6'],
     command: ['-splice#F','-splice#F#-word§size#15#-limit§lookup#false','-splice#F#-word§size#12#-limit§lookup#false','-splice#F#-gapopen#4#-gapextend#2','-splice#F#-max§db§word§count#60']}
@@ -48,7 +48,7 @@ param:
 contamination: 20 #20% de read humain
 seed : 12345
 
-number : 125
+number : 2
 variant: { 
   number: 2,
   specify: [5,0.1],

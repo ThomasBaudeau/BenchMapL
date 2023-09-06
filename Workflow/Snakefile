@@ -1,6 +1,8 @@
 import os
 # config file name
 configfile: '../config/config.yaml'
+
+
 def autocoverage(wildcards):
     return int(((9000*int(config['number']))/(int(wildcards.length)/2)))
 
@@ -27,7 +29,7 @@ ruleorder: add_human > convert_header
 TOOLS= [tool for tool in config['param']]
 #Path
 
-path_tool = "../../../"
+path_tool = "../../"
 path_maketool = os.path.join(path_tool,"PipTool")
 path_os_minimap=os.path.join(path_maketool,"os-minimap2")
 path_sync_minimap=os.path.join(path_maketool,"syncmer_minimap")
@@ -35,28 +37,29 @@ path_blend=os.path.join(path_maketool,"blend/bin")
 path_blast2sam=os.path.join(path_tool,"../bin/Blast2sam/jvarkit/dist/")
 #Function
 
+def exparam(wildcards):
+    return expand("mapped_reads/{{tool}}_{{species}}_{{length}}_{{error_rate}}_{param}.bam",param=config['param'][wildcards.tool]['command'])
 
 
-def two_sample_all(wildcards):
+def all_sample_default(wildcards):
     ret=[]
-    a= expand( "mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.bam",zip,tool=TOOLS,allow_missing=True)
+    return expand( "mapped_reads/{tool}_{{species}}_{{length}}_{{error_rate}}_{param}.bam",zip,tool=TOOLS,param=[config['param'][tool]['command'][0] for tool in TOOLS ],allow_missing=True)
+     
+
+def exparam(wildcards):
+    return expand("mapped_reads/{{tool}}_{{species}}_{{length}}_{{error_rate}}_{param}.bam",param=config['param'][wildcards.tool]['command'])
+def getdefaut(wildcards):
+    return config['param'][wildcards.tool]['command'][0]
+
+def all_sample_best2(wildcards):
+    ret=[]
+    a= expand( "mapped_reads/{tool}_{{species}}_{{length}}_{{error_rate}}_{param}.bam",zip,tool=TOOLS, allow_missing=True)
     for elem in a:
-        for specie in config['species']:
-            for length in config['length']:
-                for er in config['error_rate']:
-                    for aparam in config['param'][elem[13:elem.find('_',13)]]['command']:
-                        b=elem.replace('{species}',specie)
-                        b=b.replace('{error_rate}',er)
-                        b=b.replace('{length}',str(length))
-                        b=b.replace('{param}',aparam)
-                        ret.append(b)
+        for i in range(len(config['param'][elem[13:elem.find('_',13)]]['command'])):
+                if '*' in config['param'][elem[13:elem.find('_',13)]]['name'][i]:
+                    b=elem.replace('{param}',config['param'][elem[13:elem.find('_',13)]]['command'][i])
+                    ret.append(b)
     return ret
-
-
-
-
-
-
 def all_stat_default(wildcards):
     ret=[]
     a= expand( "stat_tools/{tool}_{species}_{length}_{error_rate}_{param}.stat.txt",zip,tool=TOOLS,param=[config['param'][tool]['command'][0] for tool in TOOLS ],allow_missing=True)
@@ -87,7 +90,7 @@ def all_sample_best(wildcards):
     return ret
 
 
-def all_reads2(wildcards):
+def all_readsPerf(wildcards):
     ret=[]
     a= expand( "mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.bam",zip,tool=TOOLS,allow_missing=True)
     for elem in a:
@@ -120,13 +123,9 @@ def all_reads(wildcards):
                         b=b.replace('{length}',str(length))
                         b=b.replace('{param}',aparam)
                         ret.append(b)
-    for specie in config['species']:
-            for length in config['length']:
-                for er in config['error_rate']:             
-                    ret.append('medaka/perfect_{species}_{alength}_{error_rate}_perfect.vcf'.format(species=specie,alength=str(length),error_rate=er))
     return ret
 
-def all_sample_best_medaka(wildcards):
+def all_sample_bestPerf_medaka(wildcards):
     ret=[]
     a= expand( "medaka/{tool}_{species}_{length}_{error_rate}_{param}.vcf",zip,tool=TOOLS,allow_missing=True)
     for elem in a:
@@ -146,6 +145,7 @@ def all_sample_best_medaka(wildcards):
                         ret.append('medaka/perfect_{species}_{alength}_{error_rate}_perfect.vcf'.format(species=specie,alength=str(length),error_rate=er)) 
     return ret
 
+
 def getparamk(wildcards):
     temp = wildcards.param.split("#")
     for x,i in enumerate(temp):
@@ -160,6 +160,7 @@ def getparam(wildcards):
 rule run_var:
     input:
         expand( "plots/variant/{species}_{length}_{error_rate}_bc1.pdf", species=config['species'],length=config['length'],num=['1','2','3','4','5'],error_rate=config['error_rate'])
+
 rule run_default:
     input :
        expand( "plots/default/{species}_{length}_{error_rate}_rl{num}.pdf", species=config['species'],length=config['length'],num=['1','2','3','4','5'],error_rate=config['error_rate'])
@@ -174,9 +175,9 @@ rule run_meancor:
        expand( "plots/meancorflot/{tool}/{species}_{length}_{error_rate}_meancor.jpg",tool=TOOLS, species=config['species'],length=['150','7500'],error_rate=config['error_rate'])
 
 
-rule snake_over:
+rule run_corcigar:
     input: 
-        all_reads2
+        all_readsPerf
     output:
         'resultfinal/corcigaroverall.txt'
     conda:
@@ -189,7 +190,7 @@ rule snake_over:
 
 rule call_variants:
     input:
-        all_sample_best_medaka
+        all_sample_bestPerf_medaka
 
 rule run_best:
     input :
@@ -200,21 +201,12 @@ rule final_stat:
         all_stat_default
 
 
-def all_sample_best2(wildcards):
-    ret=[]
-    a= expand( "mapped_reads/{tool}_{{species}}_{{length}}_{{error_rate}}_{param}.bam",zip,tool=TOOLS, allow_missing=True)
-    for elem in a:
-        for i in range(len(config['param'][elem[13:elem.find('_',13)]]['command'])):
-                if '*' in config['param'][elem[13:elem.find('_',13)]]['name'][i]:
-                    b=elem.replace('{param}',config['param'][elem[13:elem.find('_',13)]]['command'][i])
-                    ret.append(b)
-    return ret
 
-def getdefaut(wildcards):
-    return config['param'][wildcards.tool]['command'][0]
 
-def exparam(wildcards):
-    return expand("mapped_reads/{{tool}}_{{species}}_{{length}}_{{error_rate}}_{param}.bam",param=config['param'][wildcards.tool]['command'])
+
+
+
+
 
 rule plot_meancor:
     input:
@@ -247,6 +239,16 @@ rule plot_best_command:
 
 rule all_stats_csv:
     input:
+        all_readsPerf
+    output:
+        'resultfinal/results.csv'
+    conda:
+       "env/plotscript.yaml"
+    script:
+       'scripts/all_stats.py'
+
+rule all_stats_real_csv:
+    input:
         all_reads
     output:
         'resultfinal/results.csv'
@@ -257,66 +259,22 @@ rule all_stats_csv:
 
 rule all:
     input:
-        'resultfinal/results.csv','resultfinal/corcigaroverall.txt'
+        'resultfinal/results.csv'#,'resultfinal/corcigaroverall.txt'
         
-rule medaka_concensus:
+
+
+
+rule plot_variant_command:
     input:
-        model='data/model/r103_min_high_g360_model.hdf5',
-        ref='data/ref_{species}.fasta',
-        read="mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.bam"
+       all_sample_bestPerf_medaka
     output:
-        'medaka/{tool}_{species}_{length}_{error_rate}_{param}_concensus.fasta'
+        "plots/variant/{species}_{length}_{error_rate}_bc1.pdf",
     conda:
-        'env/medaka.yaml'
-    shell:
-        "medaka consensus {input.read} {output} --model {input.model} --batch_size 100 --threads 1"#"touch {output}"
-
-rule perfect_samtobam:
-    input:
-        ref='data/ref_{species}.fasta',
-        psam="data/perfect/{species}_{length}_{error_rate}_perfect.sam",
-        fai = 'data/ref_{species}.fasta.fai'
-    output:
-        pbam="mapped_reads/perfect_{species}_{length}_{error_rate}_perfect.bam"
-    conda:
-        "env/samtool.yaml"
-    shell:
-        """samtools view -bt {input.fai} {input.psam}>mapped_reads/y.bam;
-        samtools sort -n mapped_reads/y.bam -o mapped_reads/yt.bam;
-        samtools fixmate mapped_reads/yt.bam mapped_reads/ok.bam;
-        samtools sort mapped_reads/ok.bam -o {output.pbam}
-        samtools index {output.pbam};
-        rm mapped_reads/y.bam;
-        rm mapped_reads/yt.bam;
-        rm mapped_reads/ok.bam"""
-
-rule make_faidx:
-    input:
-        ref = 'data/ref_{species}.fasta',
-    output:
-        'data/ref_{species}.fasta.fai'
-    conda:
-        "env/samtool.yaml"
-    shell:
-        'samtools faidx {input.ref};'
-
-rule medaka_variant:
-    input:
-        consensus='medaka/{tool}_{species}_{length}_{error_rate}_{param}_concensus.fasta',
-        ref='data/ref_{species}.fasta',
-        read="mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.bam"
-    output:
-        'medaka/{tool}_{species}_{length}_{error_rate}_{param}.vcf'
-    conda:
-        'env/medaka.yaml'
-    shell:
-        "medaka variant {input.ref} {input.consensus} {output}"#"touch {output}"
+        "env/plotscript.yaml"
+    script:
+        'scripts/plot_var.py'
 
 
-def all_sample_default(wildcards):
-    ret=[]
-    return expand( "mapped_reads/{tool}_{{species}}_{{length}}_{{error_rate}}_{param}.bam",zip,tool=TOOLS,param=[config['param'][tool]['command'][0] for tool in TOOLS ],allow_missing=True)
-     
 
 
 rule plot_default_command:
@@ -333,8 +291,6 @@ rule plot_default_command:
     script:
         'scripts/plot_default.py'
 
-def exparam(wildcards):
-    return expand("mapped_reads/{{tool}}_{{species}}_{{length}}_{{error_rate}}_{param}.bam",param=config['param'][wildcards.tool]['command'])
 
 rule plot_allstat_command:
     input:
@@ -348,15 +304,37 @@ rule plot_allstat_command:
     script:
         'scripts/plot_params.py'
 
-rule plot_variant_command:
+
+
+
+#----------------------medakarule-------------------------------------
+rule medaka_concensus:
     input:
-       all_sample_best_medaka
+        model='data/model/r103_min_high_g360_model.hdf5',
+        ref='data/ref_{species}.fasta',
+        read="mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.bam"
     output:
-        "plots/variant/{species}_{length}_{error_rate}_bc1.pdf",
+        'medaka/{tool}_{species}_{length}_{error_rate}_{param}_concensus.fasta'
     conda:
-        "env/plotscript.yaml"
-    script:
-        'scripts/plot_var.py'
+        'env/medaka.yaml'
+    shell:
+        "medaka consensus {input.read} {output} --model {input.model} --batch_size 100 --threads 1"#"touch {output}"
+
+
+
+
+
+rule medaka_variant:
+    input:
+        consensus='medaka/{tool}_{species}_{length}_{error_rate}_{param}_concensus.fasta',
+        ref='data/ref_{species}.fasta',
+        read="mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.bam"
+    output:
+        'medaka/{tool}_{species}_{length}_{error_rate}_{param}.vcf'
+    conda:
+        'env/medaka.yaml'
+    shell:
+        "medaka variant {input.ref} {input.consensus} {output}"#"touch {output}"
 
 #-------------converst sam-bam-stat rules-------------------------------
 rule sam_stat:
@@ -386,6 +364,25 @@ rule calcnbreads:
         'calcreads.txt'
     shell:
         "grep -c '>' {input} >> {output}"
+
+rule perfect_samtobam:
+    input:
+        ref='data/ref_{species}.fasta',
+        psam="data/perfect/{species}_{length}_{error_rate}_perfect.sam",
+        fai = 'data/ref_{species}.fasta.fai'
+    output:
+        pbam="mapped_reads/perfect_{species}_{length}_{error_rate}_perfect.bam"
+    conda:
+        "env/samtool.yaml"
+    shell:
+        """samtools view -bt {input.fai} {input.psam}>mapped_reads/y.bam;
+        samtools sort -n mapped_reads/y.bam -o mapped_reads/yt.bam;
+        samtools fixmate mapped_reads/yt.bam mapped_reads/ok.bam;
+        samtools sort mapped_reads/ok.bam -o {output.pbam}
+        samtools index {output.pbam};
+        rm mapped_reads/y.bam;
+        rm mapped_reads/yt.bam;
+        rm mapped_reads/ok.bam"""
 #-------------Tools rules-------------------------------
 
 
@@ -681,6 +678,16 @@ rule build_dict:
     shell:
         "samtools faidx {input} ;picard CreateSequenceDictionary -R {input} -O {output}"
 
+rule make_faidx:
+    input:
+        ref = 'data/ref_{species}.fasta',
+    output:
+        'data/ref_{species}.fasta.fai'
+    conda:
+        "env/samtool.yaml"
+    shell:
+        'samtools faidx {input.ref};'
+
 rule blast_to_sam:
     input:
         ref='data/ref_{species}.dict',
@@ -847,7 +854,17 @@ rule convert_header:
         'envs/perl.yaml'
     shell:
         'script/convert1.pl {input.read} >{output}'
-        
+
+rule convert_quick:
+    input:
+        'data/samples/covid_real_real_reads1.fastq'
+    output:
+        'data/samples/covid_real_real_reads.fastq'
+    conda:
+        'envs/perl.yaml'
+    shell:
+        'script/convert1.pl {input} >{output}'
+
 rule one_line:
     input: 
         "result/{tool}/{species}_{variant}_{length}_{error_rate}_readsinco.fastq"
