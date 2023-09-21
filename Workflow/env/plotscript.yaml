@@ -1,15 +1,17 @@
 channels:
-  - conda-forge
   - anaconda
   - bioconda
+  - conda-forge
+  - pkgw-forge
   - r
   
 dependencies:
   - python = 3.8
   - biopython
-  - matplotlib=3.5
+  - wayland
+  - matplotlib=3.7.2
   - pysam=0.18.0
-  - upsetplot
+  - upsetplot=0.8.0
   - pandas
   - tqdm
 

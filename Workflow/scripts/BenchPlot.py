@@ -1,12 +1,18 @@
 import re
 from upsetplot import from_contents
 from upsetplot import UpSet
+import matplotlib
+
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pysam
 import tqdm as tq
+import os
 
+os.environ['XDG_SESSION_TYPE'] = 'x11'
+matplotlib.use('Agg')
 
 class result:
     """class for keept the different result from a bam
@@ -112,6 +118,9 @@ class resu_bcf:
         self.TN=0
         self.FP=0
         self.FN=0
+        self.Pr=0
+        self.rec=0
+        self.f1=0
 
     def setname(self,name):
         """set name
@@ -130,6 +139,21 @@ class resu_bcf:
     def setFN(self):
         self.FN+=1
 
+    def setPr_rec(self):
+        if (self.TP+self.FP)==0:
+            self.Pr=0
+        else:
+            self.Pr=self.TP/(self.TP+self.FP)
+        if (self.TP+self.FN)==0:
+            self.rec=0
+        else:
+            self.rec=self.TP/(self.TP+self.FN)
+
+    def set_F1(self):
+        if self.rec+self.Pr==0:
+            self.f1=0
+        else:
+            self.f1=2*(self.rec*self.Pr)/(self.rec+self.Pr)
 
 
 def parsenamesimu(text):
@@ -546,6 +570,7 @@ def plot_params(data_path, out_path, myparam):
     """
     files=list(data_path)
     groups=group_input_param(files,myparam)
+    print(groups)
     for key in groups.keys():
         if find_output(key,outpath=out_path): 
             lst=groups[key]
@@ -618,6 +643,7 @@ def plot_simple(data_path, out_path, myparam,test=False):
     :param myparam: config files
     :type myparam: list
     """ 
+    
     files=list(data_path)
     groups=group_input_simple(files,myparam)
     for key in groups.keys():
@@ -653,6 +679,8 @@ def parsevariant(file,resudic):
             resu.setFP()
     for _ in range(posvar):
         resu.setFN()
+    resu.setPr_rec()
+    resu.set_F1()
     return resu
 
 
@@ -698,7 +726,8 @@ def files_stats(data_path, out_path, myparam):
         pysam.set_verbosity(save)
         resu=countdiff(bamFP)
         resu2=parsevariant(file,parseresuvar(findspecies(file)))
-        infos.update(mapped=resu.mapped,unmapped=resu.unmapped,wrongalign=resu.missaligned,r0=resu.cor,r5=resu.cor_5,r10=resu.cor_10,r20=resu.cor_20,TP=resu2.TP,FN=resu2.FN,FP=resu2.FP)
+        resu3=parsevariant(file.replace('medaka','bcf'),parseresuvar(findspecies(file)))
+        infos.update(mapped=resu.mapped,unmapped=resu.unmapped,wrongalign=resu.missaligned,r0=resu.cor,r5=resu.cor_5,r10=resu.cor_10,r20=resu.cor_20,TP=resu2.TP,FN=resu2.FN,FP=resu2.FP,precison=resu2.Pr,recall=resu2.rec,f1score=resu2.f1,bc_TP=resu3.TP,bc_FN=resu3.FN,bc_FP=resu3.FP,bc_precison=resu3.Pr,bc_recall=resu3.rec,bc_f1score=resu3.f1)
         if idx==0:
             df=pd.DataFrame(data=infos,index=[idx])
         else:
