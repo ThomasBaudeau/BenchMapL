@@ -29,10 +29,7 @@ def plot_histcig(f,perfect,outfile):
     
 # if __name__ == "__main__":
 #     main()
-a="../../Documents/BenchMapL/BenchMapL/Workflow/mapped_reads/"
-tool='minimap2'
-b=a+tool+"_covid_150_0.80_#.bam"
-c=a+"perfect_covid_150_0.80_perfect.bam"
+
 
 
 

@@ -2,7 +2,8 @@ from plotcigar import *
 
 def do_something(input,output,params):
     onexp={}
-    for abam in input:
+    for avcf in input:
+        abam=avcf.replace('medaka/','mapped_reads/').replace('.vcf','.bam')
         firstpart=abam.split("mapped_reads/")[1]
         secondpart=firstpart.split('_')
         xp='_'.join(secondpart[1:4])
@@ -18,7 +19,7 @@ def do_something(input,output,params):
             except:
                 onexp[xp]={}
                 onexp[xp]['lstbam']=[abam]
-    
+    print(onexp)
     overall(onexp,str(output))
  
 

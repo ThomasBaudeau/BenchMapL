@@ -17,6 +17,12 @@ try:
     shutil.rmtree('medaka')
 except:
     pass
+
+try:
+    shutil.rmtree('bcf')
+except:
+    pass
+
 try:
     shutil.rmtree('perfect_sam')
 except:

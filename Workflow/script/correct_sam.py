@@ -1,6 +1,8 @@
 import os
 def find_variant(file):
     vf=open(file).readlines()
+    if not vf:
+        return {}
     vardict={}
     pos=[]
     type=[]
