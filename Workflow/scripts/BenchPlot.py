@@ -682,7 +682,7 @@ def parsevariant(file,resudic):
     bcf_in=pysam.VariantFile(file)
     posvar=len(resudic.keys())
     for rec in bcf_in.fetch():
-        resu.addgroup(rec.pos)
+        resu.addgroup(str(rec.ref)+'_'+str(rec.pos)+'_'+str(rec.alts))
         if (str((int(rec.pos)-1)) in resudic) or (str((int(rec.pos))) in resudic) or (str((int(rec.pos)-2)) in resudic):
             resu.setTP()
             posvar-=1
