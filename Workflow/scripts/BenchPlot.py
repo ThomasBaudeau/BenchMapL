@@ -121,6 +121,8 @@ class resu_bcf:
         self.Pr=0
         self.rec=0
         self.f1=0
+        self.group=[]
+        self.name=''
 
     def setname(self,name):
         """set name
@@ -130,6 +132,9 @@ class resu_bcf:
         """
         self.name=name
     
+    def addgroup(self,name):
+        self.group.append(name)
+
     def setTP(self):
         self.TP+=1
     def setTN(self):
@@ -650,28 +655,34 @@ def plot_simple(data_path, out_path, myparam,test=False):
         if find_output(key,outpath=out_path): 
             lst=groups[key]
             results=[]
+            result_var=[]
             for tool in lst:
                 save = pysam.set_verbosity(0)
                 bamFP = pysam.AlignmentFile(tool, "rb")
                 pysam.set_verbosity(save)
                 name=findname(tool)
                 resu=countdiff(bamFP)
-                
+                file=tool.replace('mapped_reads','medaka').replace('.bam','.vcf')
+                resu2=parsevariant(file,parseresuvar(findspecies(file)))
                 resu.setname(name)
                 results.append(resu)
+                result_var.append(resu2)
             common_error_gp1(results,find_output(key,'rl4', out_path))
             common_error_gp2(results,find_output(key,'rl5', out_path))
             multiple_cor(results,find_output(key,'rl2', out_path))    
             plot_histoMU(results,find_output(key,'rl1', out_path))
             plot_histoNotHuman(results,find_output(key,'rl3', out_path))
+            upsetplot_var(result_var,find_output(key,'rl6', out_path))
             if test:
                 return results
 
 def parsevariant(file,resudic):
     resu=resu_bcf()
+    resu.name=findname(file)
     bcf_in=pysam.VariantFile(file)
     posvar=len(resudic.keys())
     for rec in bcf_in.fetch():
+        resu.addgroup(rec.pos)
         if (str((int(rec.pos)-1)) in resudic) or (str((int(rec.pos))) in resudic) or (str((int(rec.pos)-2)) in resudic):
             resu.setTP()
             posvar-=1
@@ -700,6 +711,8 @@ def plotvariant(data_path, out_path, myparam,test=False) :
                 resu.setname(findname(tool))
                 results.append(resu)
             plot_histoVar(results,out_path[0])
+
+
 
 
 def find_info (file,par):
@@ -736,6 +749,19 @@ def files_stats(data_path, out_path, myparam):
         idx+=1  
     df.to_csv(str(out_path))
     
+def upsetplot_var(results,output='test.pdf'):
+    if output:
+        plt.clf()
+        variants={}
+        for read in results:
+            variants[read.name]=read.group
+        plot1=from_contents(variants)
+        try:
+            polt = UpSet(plot1,show_counts=True,element_size=21).plot()
+        except:
+            pass
+        plt.title('Categories of variant among tool')
+        plt.savefig(output,dpi=300,format='pdf')
 
 def parseresuvar(file=''):
     bcf_resu=open('data/'+file+'_variant_file.txt','r')
