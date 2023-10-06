@@ -11,6 +11,7 @@ import pysam
 import tqdm as tq
 import os
 
+
 os.environ['XDG_SESSION_TYPE'] = 'x11'
 matplotlib.use('Agg')
 
@@ -100,6 +101,10 @@ class result:
             self.cor_10+=1
         elif num==20:
             self.cor_20+=1
+
+    def get_max_cor(self):
+        return self.cor+self.cor_5+self.cor_10+self.cor_20
+            
 
     def increm_mapped(self):
         """increment mapped
@@ -325,12 +330,23 @@ def get_all_cor(results):
     data_cor5=[]
     data_cor10=[]
     data_cor20=[]
+    data_corsup=[]
+    ttread=[]
     for result in results:
-        data_cor.append(result.corpercent(result.cor))
-        data_cor5.append(result.corpercent(result.cor_5))
-        data_cor10.append(result.corpercent(result.cor_10))
-        data_cor20.append(result.corpercent(result.cor_20))
-    return [data_cor,data_cor5,data_cor10,data_cor20]
+        if result.corpercent(result.get_max_cor())==0:
+            data_corsup.append(0)
+            data_cor.append(0)
+            data_cor5.append(0)
+            data_cor10.append(0)
+            data_cor20.append(0)
+        else:
+            data_corsup.append(100-result.corpercent(result.get_max_cor()))
+            data_cor.append(result.corpercent(result.cor))
+            data_cor5.append(result.corpercent(result.cor_5))
+            data_cor10.append(result.corpercent(result.cor_10))
+            data_cor20.append(result.corpercent(result.cor_20))
+        ttread.append(result.mapped)
+    return [data_cor,data_cor5,data_cor10,data_cor20,data_corsup],ttread
 
 def plot_histoMU(results,output):
     """plot histogram of unmapped /mapped reads 
@@ -340,20 +356,20 @@ def plot_histoMU(results,output):
     :param output: name of the output
     :type output: str
     """
-    if output:
+    if output: 
         width = 0.45       # the width of the bars: can also be len(x) sequence
-        fig, ax = plt.subplots(figsize=(7, 7))
+        fig, ax = plt.subplots(figsize=(16, 9))
         plt.rcParams.update({'font.size': 11})
         labels=get_label(results)
         d1,d2=get_MapOrNot(results)
-        ax.set_xticklabels(labels, rotation = 45)
+        ax.set_xticklabels(labels, rotation = 45,ha='right')
         ax.bar(labels, d2, width, label='Mapped_reads')
         ax.bar(labels, d1, width, label='Unmapped_reads',bottom=d2)
         ax.set_ylabel('Percentage of reads')
-        ax.set_title('Percentage of reads by status and tools')
+        ax.set_title('Percentage of mapped reads ')
         ax.legend()
         plt.subplots_adjust(left=0.2, bottom=0.2)
-        plt.savefig(output,dpi=300,format='pdf')
+        plt.savefig(output,dpi=500,format='pdf')
 
 
 
@@ -412,14 +428,15 @@ def plot_histoNotHuman(results,output):
     :type output: str
     """
     if output:
-        width = 0.35       # the width of the bars: can also be len(x) sequence
-        fig, ax = plt.subplots(figsize=(7, 7))
+        width = 0.45       # the width of the bars: can also be len(x) sequence
+        fig, ax = plt.subplots(figsize=(16, 9))
         plt.rcParams.update({'font.size': 11})
         labels=get_label(results)
+        ax.set_xticklabels(labels, rotation = 45,ha='right')
         d2=get_nbHuman(results)
         ax.bar(labels, d2, width, label='Human_reads')
         ax.set_ylabel('Percentage of reads')
-        ax.set_title('Percentage of non reference\'s reads by tools')
+        ax.set_title('Percentage of mapped contamination reads')
         ax.legend()
         plt.savefig(output,dpi=300,format='pdf')
 
@@ -478,11 +495,11 @@ def multiple_cor(results,output):
     """
     if output:
         plt.clf()
-        plt.figure(figsize=(13, 8))
-        plt.rcParams.update({'font.size': 15})
-        data = get_all_cor(results)
+        plt.figure(figsize=(16, 10))
+        plt.rcParams.update({'font.size': 16})
+        data,ttread = get_all_cor(results)
         columns = get_label(results)
-        rows = ['perfect','5pb_shift','10pb_shift','20pb_shift']
+        rows = ['perfect','5b shift','10b shift','20b shift', '>20b shift','# reads']
         values = np.arange(0, 120, 20)
         colors = plt.cm.BuPu(np.linspace(0.15, .65, len(rows)))
         n_rows = len(data)
@@ -492,24 +509,30 @@ def multiple_cor(results,output):
         y=np.zeros(len(columns))
         cell_text = []
         for row in range(n_rows):
-            plt.bar(index, data[row], bar_width, bottom=y, color=colors[row])
+            a=plt.bar(index, data[row], bar_width, bottom=y, color=colors[row])
             y_offset = data[row]
             y=y+data[row]
-            cell_text.append(['%1i' % (x / 1) for x in y])
+            #changer la facon de calc le total
+            cell_text.append(['%2i' % round(x)  for x in y_offset])
+        cell_text.append(['%2i' % round(x)  for x in ttread])
+        
         the_table = plt.table(cellText=cell_text,
                             rowLabels=rows, 
                             alpha=1, 
                             rowColours=colors, 
-                            colLabels=columns, 
-                            loc='bottom')
-        the_table.scale(1, 1.8)
-        the_table.auto_set_font_size(False)
-        the_table.set_fontsize(15)
+                            colLabels=columns,
+                            loc='bottom'
+                            )
+        the_table.scale(1, 1.7)
+        the_table.auto_set_font_size(True)
+        #the_table.set_fontsize(15)
         plt.subplots_adjust(left=0.12, bottom=0.19)
         plt.ylabel("Percentage of reads")
         plt.yticks(values, ['%d' % val for val in values])
+        # for tx,ypos in zip(ttread,index):
+        #     plt.text(ypos,20,tx,color='black')
         plt.xticks([])
-        plt.title('Proportion of correctly mapped read by tools and error')
+        plt.title('Proportion of correctly located read')
         
         plt.savefig(output,dpi=900,format='pdf')
 
@@ -760,7 +783,7 @@ def upsetplot_var(results,output='test.pdf'):
             polt = UpSet(plot1,show_counts=True,element_size=21).plot()
         except:
             pass
-        plt.title('Categories of variant among tool')
+        plt.title('Shared detected variants')
         plt.savefig(output,dpi=300,format='pdf')
 
 def parseresuvar(file=''):

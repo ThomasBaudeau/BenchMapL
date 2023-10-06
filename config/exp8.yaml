@@ -1,9 +1,9 @@
 realdata: False
-length: [7500]
-species: ['vih']
-error_rate: ['0.99']
-model: 'R103'
-model_m: 'r103'
+length: [500,7500]
+species: ['covid']
+error_rate: ['0.95']
+model: 'R94'
+model_m: 'r941'
 cig_modif: False
 param:
   minimap2: {
@@ -20,7 +20,7 @@ param:
     command: ['#','-k#7#-A#8','-k#5#-A#7#--freq-percentile#1.0',]}
   blasr: {
     name: ['default*','G1','G2'],
-    command: ['#','--minMatch#7#--nCandidates#20','--minMatch#10#--nCandidates#20']}
+    command: ['#','--minMatch#7#--nCandidates#20','--minMatch#10#--nCandidates#20',]}
   winnowmap2: {
     name: ['default*','D1','D2'],
     command: ['#','-k#15#-w#1','-k#12#-w#4']}
@@ -38,7 +38,7 @@ param:
     command: ['#','-k#7#-W#10','-k#5#-w#1']}
   syncminimap: {
     name: ['default*','I1','I2','I3','I4','I5','I6'],
-    command: ['-k#15#-w#0#--downsample#1#--s-mer#5#--pos1#3#--pos2#9','-k#7#-w#0#--downsample#1#--s-mer#5#--pos1#3#--pos2#9','-k#7#-w#0#--downsample#1#--s-mer#5#--pos1#3#--pos2#9']}
+    command: ['-k#15#-w#10#--downsample#1#--s-mer#5#--pos1#3#--pos2#9','-k#7#-w#10#--downsample#1#--s-mer#5#--pos1#3#--pos2#9','-k#5#-w#1#--downsample#1#--s-mer#5#--pos1#3#--pos2#9']}
 
   # minimapsync: {
   #   name: ['default','J1*','J2'],
@@ -53,14 +53,14 @@ param:
   #   name: ['default*','H1','H2','H3','H4','H5','H6'],
   #   command: ['--syncs#11#--synct#3','--syncs#14#--synct#6','--syncs#5#--synct#3']}
 
-contamination: 1 #20% de read humain
+contamination: 10 #20% de read humain
 seed : 12345
 
-number : 109
+number : 100
 
 variant: { 
-  number: 0,
-  specify: [1,0.1],
-  taux: [33,33]}
+  number: 1,
+  specify: [2],
+  taux: [50]}
 #for specifie type of snp {'i':['0r'],'d':['0r'],'s':['1r']} else type 
 #number variant will be number/1000 variation

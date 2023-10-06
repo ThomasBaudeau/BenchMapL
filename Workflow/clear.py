@@ -29,6 +29,22 @@ except:
     pass
 
 try:
+    shutil.rmtree('result')
+except:
+    pass
+
+try:
+    shutil.rmtree('plots')
+except:
+    pass
+
+
+try:
+    shutil.rmtree('resultfinal')
+except:
+    pass
+
+try:
     shutil.rmtree('mapped_reads')
 except:
     pass

@@ -4,4 +4,4 @@ import numpy as np
 import matplotlib.pyplot as plt
 from BenchPlot import *
 
-plot_params(snakemake.input, snakemake.output, snakemake.config)
+plot_params(snakemake.input['a'], snakemake.output, snakemake.config)

@@ -16,9 +16,13 @@ path_blast2sam=os.path.join(path_tool,"../bin/Blast2sam/jvarkit/dist/")
 #Function
 
 
+def rtaille(sp):
+    taille={'covid':29800,'vih':9000}
+    return taille[sp]
+
 
 def autocoverage(wildcards):
-    return int(((9000*int(config['number']))/(int(wildcards.length)/2)))
+    return int(((rtaille(wildcards.species)*int(config['number']))/(int(wildcards.length)/2)))
 
 def getparamk(wildcards):
     temp = wildcards.param.split("#")
@@ -69,6 +73,7 @@ if config['realdata']:
 else:
 
     ruleorder: add_human > convert_header 
+    ruleorder: all_stats_csv >plot_default_command>plot_allstat_command>plot_best_command
 
     def all_sample_medaka(wildcards):
         ret=[]
@@ -113,13 +118,15 @@ def all_bam_default(wildcards):
 
 rule plot_best_command:
     input:
-       all_bam_best
+       a=all_bam_best,
+       b='resultfinal/results.csv'
     output:
         "plots/best/{species}_{length}_{error_rate}_rl1.pdf",
         "plots/best/{species}_{length}_{error_rate}_rl2.pdf",
         "plots/best/{species}_{length}_{error_rate}_rl3.pdf",
         "plots/best/{species}_{length}_{error_rate}_rl4.pdf",
-        "plots/best/{species}_{length}_{error_rate}_rl5.pdf"
+        "plots/best/{species}_{length}_{error_rate}_rl5.pdf",
+        "plots/best/{species}_{length}_{error_rate}_rl6.pdf"
     conda:
         "env/plotscript.yaml"
     script:
@@ -127,13 +134,15 @@ rule plot_best_command:
 
 rule plot_default_command:
     input:
-       all_bam_default,
+       a=all_bam_default,
+       b='resultfinal/results.csv'
     output:
         "plots/default/{species}_{length}_{error_rate}_rl1.pdf",
         "plots/default/{species}_{length}_{error_rate}_rl2.pdf",
         "plots/default/{species}_{length}_{error_rate}_rl3.pdf",
         "plots/default/{species}_{length}_{error_rate}_rl4.pdf",
-        "plots/default/{species}_{length}_{error_rate}_rl5.pdf"
+        "plots/default/{species}_{length}_{error_rate}_rl5.pdf",
+        "plots/default/{species}_{length}_{error_rate}_rl6.pdf"
     conda:
         "env/plotscript.yaml"
     script:
@@ -141,7 +150,8 @@ rule plot_default_command:
 
 rule plot_allstat_command:
     input:
-        exparam
+        a=exparam,
+        b='resultfinal/results.csv'
     output:
         "plots/params/{tool}/{tool}_{species}_{length}_{error_rate}_bc1.pdf",
         "plots/params/{tool}/{tool}_{species}_{length}_{error_rate}_bc2.pdf",
@@ -179,36 +189,37 @@ rule run_corcigar:
 if config['realdata']:
     rule all:
         input:
-            'resultfinal/results.csv'
+            'resultfinal/results.csv', expand( "plots/default/{species}_{length}_{error_rate}_rl{num}.pdf", species=config['species'],length=config['length'],num=['1','2','3','4','5','6'],error_rate=config['error_rate']),expand( "plots/params/{tool}/{tool}_{species}_{length}_{error_rate}_bc{num}.pdf",tool=TOOLS, species=config['species'],length=config['length'],num=['1','2','3'],error_rate=config['error_rate'])
 
 
 else:
     rule all:
         input:
-            'resultfinal/results.csv','resultfinal/corcigaroverall.txt'
+            'resultfinal/results.csv','resultfinal/corcigaroverall.txt', expand( "plots/default/{species}_{length}_{error_rate}_rl{num}.pdf", species=config['species'],length=config['length'],num=['1','2','3','4','5','6'],error_rate=config['error_rate']),expand( "plots/params/{tool}/{tool}_{species}_{length}_{error_rate}_bc{num}.pdf",tool=TOOLS, species=config['species'],length=config['length'],num=['1','2','3'],error_rate=config['error_rate'])
 
 
 rule run_default:
     input :
-       expand( "plots/default/{species}_{length}_{error_rate}_rl{num}.pdf", species=config['species'],length=config['length'],num=['1','2','3','4','5'],error_rate=config['error_rate'])
+       expand( "plots/default/{species}_{length}_{error_rate}_rl{num}.pdf", species=config['species'],length=config['length'],num=['1','2','3','4','5','6'],error_rate=config['error_rate'])
 
 rule run_params:
     input :
-       expand( "plots/params/{tool}/{tool}_{species}_{length}_{error_rate}_bc{num}.pdf",tool=TOOLS, species=config['species'],length=['150','7500'],num=['1','2','3'],error_rate=config['error_rate'])
+       expand( "plots/params/{tool}/{tool}_{species}_{length}_{error_rate}_bc{num}.pdf",tool=TOOLS, species=config['species'],length=config['length'],num=['1','2','3'],error_rate=config['error_rate'])
 
 
 #----------------------medakarule-------------------------------------
 rule medaka_concensus:
     input:
-        model='data/model/r103_min_high_g360_model.hdf5',
         ref='data/ref_{species}.fasta',
         read="mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.bam"
     output:
         'medaka/{tool}_{species}_{length}_{error_rate}_{param}_concensus.fasta'
+    params:
+        model='data/model/'+config['model_m']+'_min_high_g360_model.hdf5',
     conda:
         'env/medaka.yaml'
     shell:
-        "medaka consensus {input.read} {output} --model {input.model} --batch_size 100 --threads 1"#"touch {output}"
+        "medaka consensus {input.read} {output} --model {params.model} --batch_size 100 --threads 1"#"touch {output}"
 
 
 
@@ -251,15 +262,39 @@ rule sam_stat:
     shell:
        "samtools stats {input} > {output}"
 
-rule sam_bam:
-    input:
-        "mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.sam"
-    output:
-        "mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.bam"
-    conda:
-        "env/samtool.yaml"
-    shell:
-       "samtools sort {input} > {output};samtools index {output}"#;rm {input};
+if config['cig_modif']:
+    rule sam_bam:
+        input:
+            "mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}_corrected.sam"
+        output:
+            "mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.bam"
+        conda:
+            "env/samtool.yaml"
+        shell:
+            "samtools sort {input} > {output};samtools index {output}"#;rm {input};
+
+    rule change_cigar:
+        input:
+            a="mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.sam",
+            b="mapped_reads/minimap2_{species}_{length}_{error_rate}_#.sam"
+        output:
+            "mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}_corrected.sam"
+        conda:
+            "env/plotscript.yaml"
+        script:
+            "script/correct_bam.py"#;rm {input};
+
+
+else:
+    rule sam_bam:
+        input:
+            "mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.sam"
+        output:
+            "mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.bam"
+        conda:
+            "env/samtool.yaml"
+        shell:
+            "samtools sort {input} > {output};samtools index {output}"#;rm {input};
 
 rule calcnbreads:
     input:
@@ -640,9 +675,9 @@ if not config['realdata']:
             "mv {input.a} {output.a};mv {input.c} {output.b}"
 
 
-    rule all_pb:
-        input:
-            expand("result/pbsim2/{species}_{length}_{error_rate}_variantreads.fastq",species=config['species'],length=config['length'],error_rate=config['error_rate'],variant=config['variant']['number'])
+    # rule all_pb:
+    #     input:
+    #         expand("result/pbsim2/{species}_{length}_{error_rate}_variantreads.fastq",species=config['species'],length=config['length'],error_rate=config['error_rate'],variant=config['variant']['number'])
 
 
     rule build_readsvariant:
@@ -692,7 +727,6 @@ if not config['realdata']:
     rule simu_phase:
         input:
             ref="data/ref_{species}_{variant}.fasta",
-            model="data/supl/R103.model"
         wildcard_constraints:
             species="[a-z]*"
         conda:
@@ -700,14 +734,15 @@ if not config['realdata']:
         output:
             temp("result/pbsim2/simu_{species}_{variant}_{length}_{error_rate}")#temp("simu_{species}")
         params:
-            number=config['number'],
+            number=autocoverage,
             seed= config['seed'],
             tsize='{length}',
             er='{error_rate}',
             tmin= lmin,
-            tmax= lmax
+            tmax= lmax,
+            model='data/supl/'+config['model']+'.model'
         shell:
-            "pbsim --depth {params.number} --prefix {output} --length-mean {params.tsize} --length-min {params.tmin} --length-max {params.tmax} --accuracy-mean {params.er} --difference-ratio 23:31:46 --seed {params.seed} --hmm_model {input.model} {input.ref};touch {output}"
+            "pbsim --depth {params.number} --prefix {output} --length-mean {params.tsize} --length-min {params.tmin} --length-max {params.tmax} --accuracy-mean {params.er} --difference-ratio 23:31:46 --seed {params.seed} --hmm_model {params.model} {input.ref};touch {output}"
 
 
 
@@ -778,19 +813,6 @@ if not config['realdata']:
             "cat {input}>{output}"
             #"""awk '/^>/ {{printf("\\n%s\\n",$0);next; }} {{ printf("%s",$0);}}  END {{printf("\\n");}}' < {input} | tail -n +2 > {output}"""
 
-    rule add_human2:
-        input:
-            human='data/supl/human_read.fastq',
-            data="result/pbsim2/{species}_{variant}_{length}_{error_rate}_reads.fastq",
-            todel='result/pbsim2/simu_{species}_{variant}_{length}_{error_rate}',
-            att= "result/pbsim2/{species}_{length}_{error_rate}_variantreads.fastq"
-        output:
-            "result/pbsim2/{species}_{length}_{error_rate}_readshuman.fastq"
-        conda:
-            "envs/pyt.yaml"
-        script:
-            'script/select_human_pbsim.py'
-
 rule convert_quick:
     input:
         'data/samples/covid_real_real_reads1.fastq'
@@ -807,53 +829,53 @@ rule convert_quick:
 
 if not config['realdata']:
 
-    rule analyse_phase:
-        input:
-            ref="data/ref_{species}.fasta",
-            read="data/read_{species}.fastq"
-        conda:
-            "envs/nanosim.yaml"
-        output:
-            "result/nano/temp/simu_{species}"
-        shell:
-            "read_analysis.py genome -i {input.read} -rg {input.ref} -o {output} -t 24 ;touch {output}"
+    # rule analyse_phase:
+    #     input:
+    #         ref="data/ref_{species}.fasta",
+    #         read="data/read_{species}.fastq"
+    #     conda:
+    #         "envs/nanosim.yaml"
+    #     output:
+    #         "result/nano/temp/simu_{species}"
+    #     shell:
+    #         "read_analysis.py genome -i {input.read} -rg {input.ref} -o {output} -t 24 ;touch {output}"
 
 
-    rule simu_phase_nano:
-        input:
-            ref="data/ref_{species}.fasta",
-            folder="result/nano/temp/simu_{species}"
-        conda: 
-            "envs/nanosim.yaml"
-        output:
-            temp( "result/nano/simulated_{species}_{length}")
-        params:
-            number=autocoverage,
-            seed= config['seed'],
-            tsize='{length}'
-        shell:
-            "simulator.py genome -rg {input.ref} -c {input.folder} -o {output} -n {params.number} -max {params.tsize} -t 24 --seed {params.seed};touch {output}"
+    # rule simu_phase_nano:
+    #     input:
+    #         ref="data/ref_{species}.fasta",
+    #         folder="result/nano/temp/simu_{species}"
+    #     conda: 
+    #         "envs/nanosim.yaml"
+    #     output:
+    #         temp( "result/nano/simulated_{species}_{length}")
+    #     params:
+    #         number=autocoverage,
+    #         seed= config['seed'],
+    #         tsize='{length}'
+    #     shell:
+    #         "simulator.py genome -rg {input.ref} -c {input.folder} -o {output} -n {params.number} -max {params.tsize} -t 24 --seed {params.seed};touch {output}"
 
-    rule add_human_nano:
-        input:
-            human='data/supl/human_read.fastq',
-            data='result/nano/simulated_{species}_{length}'
-        output:
-            temp("result/nano/mv_done_{species}_{length}_human")
-        conda:
-            "envs/pyt.yaml"
-        script:
-            'script/select_human_nanosim.py'
+    # rule add_human_nano:
+    #     input:
+    #         human='data/supl/human_read.fastq',
+    #         data='result/nano/simulated_{species}_{length}'
+    #     output:
+    #         temp("result/nano/mv_done_{species}_{length}_human")
+    #     conda:
+    #         "envs/pyt.yaml"
+    #     script:
+    #         'script/select_human_nanosim.py'
 
-    rule rename_nano:
-        input:
-            tmp='result/nano/mv_done_{species}_{length}_human',
+    # rule rename_nano:
+    #     input:
+    #         tmp='result/nano/mv_done_{species}_{length}_human',
         
-        output:
-            out1=temp("result/nano/done_{species}_{length}_0_human"),
-            out2=temp("result/nano/simulated_{species}_{length}_0")
-        shell:
-            "mv result/nano/simulated_{wildcards.species}_{wildcards.length}_aligned_reads.fastq {output.out2};touch {output.out1}"
+    #     output:
+    #         out1=temp("result/nano/done_{species}_{length}_0_human"),
+    #         out2=temp("result/nano/simulated_{species}_{length}_0")
+    #     shell:
+    #         "mv result/nano/simulated_{wildcards.species}_{wildcards.length}_aligned_reads.fastq {output.out2};touch {output.out1}"
 
 
 

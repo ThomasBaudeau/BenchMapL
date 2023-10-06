@@ -4,7 +4,7 @@ def extract_param_out(outpath,param):
     rep=outpath.split('/')[2].split('_')
     size=extract_len_specie(rep[0])
     msize=rep[1]
-    return ((int(size)/int(msize))*param['number'])
+    return ((int(size)*param['number'])/(int(msize)/2))
 
     
 
