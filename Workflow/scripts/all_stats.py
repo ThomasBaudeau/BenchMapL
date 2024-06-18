@@ -5,4 +5,4 @@ import matplotlib.pyplot as plt
 from BenchPlot import *
 import pandas as pd
 
-files_stats(snakemake.input, snakemake.output, snakemake.config)
+files_stats(snakemake.input['a'],snakemake.input['b'], snakemake.output, snakemake.config)

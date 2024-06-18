@@ -17,7 +17,7 @@ param:
     command: ['#','-x#sensitive','-x#illumina']} #'-a#sg','-a#sggotoh'
   graphmap: {
     name: ['default','A1','A2'],
-    command: ['#','-k#7#-A#8','-k#5#-A#7#--freq-percentile#1.0',]}
+    command: ['#','-k#7#-A#8','-k#5#-A#7#--freq-percentile#1.0']}
   blasr: {
     name: ['default*','G1','G2'],
     command: ['#','--minMatch#7#--nCandidates#20','--minMatch#10#--nCandidates#20',]}
@@ -54,9 +54,9 @@ param:
   #   command: ['--syncs#11#--synct#3','--syncs#14#--synct#6','--syncs#5#--synct#3']}
 
 contamination: 10 #20% de read humain
-seed : 12345
+seed: 12345
 
-number : 10
+number: 10
 
 variant: { 
   number: 1,

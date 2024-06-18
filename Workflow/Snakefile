@@ -3,7 +3,7 @@ import os
 
 
 
-configfile: '../config/config.yaml'
+configfile: '../config/config_test.yaml'
 TOOLS= [tool for tool in config['param']]
 #Path
 
@@ -70,6 +70,22 @@ if config['realdata']:
                             b=b.replace('{param}',config['param'][elem[7:elem.find('_',7)]]['command'][i])
                             ret.append(b)
         return ret
+
+
+    def all_sample_medaka_vcdist(wildcards):
+        ret=[]
+        a= expand('medaka/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_precision-recall-summary.tsv',zip,tool=TOOLS,allow_missing=True)
+        for elem in a:
+            for specie in config['species']:
+                for length in config['length']:
+                    for er in config['error_rate']:
+                        for i in range(len(config['param'][elem[15:elem.find('_',15)]]['command'])):
+                            b=elem.replace('{species}',specie)
+                            b=b.replace('{error_rate}',er)
+                            b=b.replace('{length}',str(length))
+                            b=b.replace('{param}',config['param'][elem[15:elem.find('_',15)]]['command'][i])
+                            ret.append(b)
+        return ret
 else:
 
     ruleorder: add_human > convert_header 
@@ -92,6 +108,21 @@ else:
                     for length in config['length']:
                         for er in config['error_rate']:             
                             ret.append('medaka/perfect_{species}_{alength}_{error_rate}_perfect.vcf'.format(species=specie,alength=str(length),error_rate=er)) 
+        return ret
+
+    def all_sample_medaka_vcdist(wildcards):
+        ret=[]
+        a= expand('medaka/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_precision-recall-summary.tsv',zip,tool=TOOLS,allow_missing=True)
+        for elem in a:
+            for specie in config['species']:
+                for length in config['length']:
+                    for er in config['error_rate']:
+                        for i in range(len(config['param'][elem[15:elem.find('_',15)]]['command'])):
+                            b=elem.replace('{species}',specie)
+                            b=b.replace('{error_rate}',er)
+                            b=b.replace('{length}',str(length))
+                            b=b.replace('{param}',config['param'][elem[15:elem.find('_',15)]]['command'][i])
+                            ret.append(b)
         return ret
     
 
@@ -119,10 +150,12 @@ def all_bam_default(wildcards):
 rule plot_best_command:
     input:
        a=all_bam_best,
-       b='resultfinal/results.csv'
+       b='resultfinal/results.csv',
+       okok=expand('data/ref_{{species}}_{variant}_result.csv',variant=VARIANT)
     output:
         "plots/best/{species}_{length}_{error_rate}_rl1.pdf",
         "plots/best/{species}_{length}_{error_rate}_rl2.pdf",
+        "plots/best/{species}_{length}_{error_rate}_rl22.pdf",
         "plots/best/{species}_{length}_{error_rate}_rl3.pdf",
         "plots/best/{species}_{length}_{error_rate}_rl4.pdf",
         "plots/best/{species}_{length}_{error_rate}_rl5.pdf",
@@ -139,6 +172,7 @@ rule plot_default_command:
     output:
         "plots/default/{species}_{length}_{error_rate}_rl1.pdf",
         "plots/default/{species}_{length}_{error_rate}_rl2.pdf",
+        "plots/default/{species}_{length}_{error_rate}_rl22.pdf",
         "plots/default/{species}_{length}_{error_rate}_rl3.pdf",
         "plots/default/{species}_{length}_{error_rate}_rl4.pdf",
         "plots/default/{species}_{length}_{error_rate}_rl5.pdf",
@@ -155,7 +189,8 @@ rule plot_allstat_command:
     output:
         "plots/params/{tool}/{tool}_{species}_{length}_{error_rate}_bc1.pdf",
         "plots/params/{tool}/{tool}_{species}_{length}_{error_rate}_bc2.pdf",
-        "plots/params/{tool}/{tool}_{species}_{length}_{error_rate}_bc3.pdf"
+        "plots/params/{tool}/{tool}_{species}_{length}_{error_rate}_bc3.pdf",
+        "plots/params/{tool}/{tool}_{species}_{length}_{error_rate}_bc4.pdf"
     conda:
         "env/plotscript.yaml"
     script:
@@ -165,7 +200,8 @@ rule plot_allstat_command:
 
 rule all_stats_csv:
     input:
-        all_sample_medaka
+        a=all_sample_medaka,
+        b=all_sample_medaka_vcdist
     output:
         'resultfinal/results.csv'
     conda:
@@ -213,7 +249,7 @@ rule medaka_concensus:
         ref='data/ref_{species}.fasta',
         read="mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.bam"
     output:
-        'medaka/{tool}_{species}_{length}_{error_rate}_{param}_concensus.fasta'
+        temp('medaka/{tool}_{species}_{length}_{error_rate}_{param}_concensus.fasta')
     params:
         model='data/model/'+config['model_m']+'_min_high_g360_model.hdf5',
     conda:
@@ -222,7 +258,13 @@ rule medaka_concensus:
         "medaka consensus {input.read} {output} --model {params.model} --batch_size 100 --threads 1"#"touch {output}"
 
 
-
+rule make_bed:
+    input:
+        'data/ref_{species}.fasta'
+    output:
+        'data/ref_{species}.bed'
+    script:
+        'scripts/bed_maker_without_tail.py'
 
 
 rule medaka_variant:
@@ -232,11 +274,23 @@ rule medaka_variant:
         read="mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.bam",
         fneed='bcf/{tool}_{species}_{length}_{error_rate}_{param}.vcf'
     output:
-        'medaka/{tool}_{species}_{length}_{error_rate}_{param}.vcf'
+        temp('medaka/{tool}_{species}_{length}_{error_rate}_{param}_temp.vcf'),
     conda:
         'env/medaka.yaml'
     shell:
         "medaka variant {input.ref} {input.consensus} {output}"#"touch {output}"
+
+
+# rule index_zip_var_medaka:
+#     input:
+#         'medaka/{tool}_{species}_{length}_{error_rate}_{param}.vcf'
+#     output:
+#         'medaka/{tool}_{species}_{length}_{error_rate}_{param}.vcf',
+#         'medaka/{tool}_{species}_{length}_{error_rate}_{param}.vcf.tbi'#)temp(
+#     conda:
+#         "env/tabix.yaml"
+#     shell:
+#         "tabix -f -p vcf {output.a}"
    
 
 
@@ -245,11 +299,149 @@ rule bcf_variant:
         ref='data/ref_{species}.fasta',
         bam="mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.bam"
     output:
-        'bcf/{tool}_{species}_{length}_{error_rate}_{param}.vcf'
+        temp('bcf/{tool}_{species}_{length}_{error_rate}_{param}_temp.vcf')
     conda:
         'env/bcf.yaml'
     shell:
         'bcftools mpileup -Ou -f {input.ref} {input.bam} | bcftools call -mv -Ob -o {output}'
+
+
+rule clair3_variant:
+    input:
+        ref='data/ref_{species}.fasta',
+        bam="mapped_reads/{tool}_{species}_{length}_{error_rate}_{param}.bam"
+    output:
+        temp('clair3/{tool}_{species}_{length}_{error_rate}_{param}_temp.vcf')
+    conda:
+        'env/clair3.yaml'
+    params:
+        apath='clair3/{tool}_{species}_{length}_{error_rate}_{param}'
+    shell:
+        'run_clair3.sh -b {input.bam} -f {input.ref} -m ${{CONDA_PREFIX}}/bin/models/r941_prom_hac_g360+g422 -t 12 -p ont --include_all_ctgs -o {params.apath};gunzip {params.apath}/merge_output.vcf.gz; mv {params.apath}/merge_output.vcf {output};rm -rf {params.apath}'
+
+
+rule final_variant_clair3:
+    input:
+        vcf= 'clair3/{tool}_{species}_{length}_{error_rate}_{param}_temp.vcf',
+        bed='data/ref_{species}.bed'
+    output:
+        'clair3/{tool}_{species}_{length}_{error_rate}_{param}.vcf'
+    conda:
+        'env/bedtools.yaml'
+    shell:
+        'bedtools intersect -a {input.vcf} -b {input.bed} -header> {output}'
+
+rule final_variant_medaka:
+    input:
+        vcf='medaka/{tool}_{species}_{length}_{error_rate}_{param}_temp.vcf',
+        bed='data/ref_{species}.bed'
+    output:
+        'medaka/{tool}_{species}_{length}_{error_rate}_{param}.vcf'
+    conda:
+        'env/bedtools.yaml'
+    shell:
+        'bedtools intersect -a {input.vcf} -b {input.bed} -header> {output}'
+
+rule final_variant_bcf:
+    input:
+        vcf= 'bcf/{tool}_{species}_{length}_{error_rate}_{param}_temp.vcf',
+        bed='data/ref_{species}.bed'
+    output:
+        'bcf/{tool}_{species}_{length}_{error_rate}_{param}.vcf'
+    conda:
+        'env/bedtools.yaml'
+    shell:
+        'bedtools intersect -a {input.vcf} -b {input.bed} -header > {output}'
+
+# rule index_zip_var_bcf:
+#     input:
+    #     'bcf/{tool}_{species}_{length}_{error_rate}_{param}.vcf'
+    # output:
+    #     'bcf/{tool}_{species}_{length}_{error_rate}_{param}.vcf',
+    #     'bcf/{tool}_{species}_{length}_{error_rate}_{param}.vcf.tbi'#)temp(
+    # conda:
+    #     "env/tabix.yaml"
+    # shell:
+    #     "cat {input};bgzip -c {input} > {output.a};tabix -f -p vcf {output.a}"
+   
+
+rule vcfdist_bcf:
+    input:
+        ref='data/ref_{species}.fasta',
+        querry='bcf/{tool}_{species}_{length}_{error_rate}_{param}.vcf',
+        GT='data/ref_{species}_agregate.vcf.gz',
+    output:
+        temp('bcf/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_parameters.txt'),
+        temp('bcf/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_phase-blocks.tsv'),
+        temp('bcf/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_phasing-summary.tsv'),
+        'bcf/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_precision-recall-summary.tsv',
+        temp('bcf/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_precision-recall.tsv'),
+        'bcf/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_query.tsv',
+        temp('bcf/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_summary.vcf'),
+        temp('bcf/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_superclusters.tsv'),
+        temp('bcf/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_switchflips.tsv'),
+        temp('bcf/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_truth.tsv')
+    params:
+        prefix='bcf/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_'
+
+    conda:
+        'env/tabix.yaml'
+    shell:
+        'vcfdist {input.querry} {input.GT} {input.ref} -p {params.prefix}  '
+
+
+rule vcfdist_clair3:
+    input:
+        ref='data/ref_{species}.fasta',
+        querry='clair3/{tool}_{species}_{length}_{error_rate}_{param}.vcf',
+        GT='data/ref_{species}_agregate.vcf.gz',
+    output:
+        temp('clair3/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_parameters.txt'),
+        temp('clair3/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_phase-blocks.tsv'),
+        temp('clair3/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_phasing-summary.tsv'),
+        temp('clair3/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_precision-recall.tsv'),
+        'clair3/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_query.tsv',
+        'clair3/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_precision-recall-summary.tsv',
+        temp('clair3/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_summary.vcf'),
+        temp('clair3/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_superclusters.tsv'),
+        temp('clair3/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_switchflips.tsv'),
+        temp('clair3/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_truth.tsv')
+    params:
+        prefix='clair3/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_'
+
+    conda:
+        'env/tabix.yaml'
+    shell:
+        'vcfdist {input.querry} {input.GT} {input.ref} -p {params.prefix}  '
+
+
+rule vcfdist_medaka:
+    input:
+        ref='data/ref_{species}.fasta',
+        querry='medaka/{tool}_{species}_{length}_{error_rate}_{param}.vcf',
+        GT='data/ref_{species}_agregate.vcf.gz',
+        ok='bcf/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_precision-recall-summary.tsv',
+        ok2='bcf/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_query.tsv',
+        ok3='clair3/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_precision-recall-summary.tsv'
+
+    output:
+        temp('medaka/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_parameters.txt'),
+        temp('medaka/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_phase-blocks.tsv'),
+        temp('medaka/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_phasing-summary.tsv'),
+        'medaka/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_precision-recall-summary.tsv',
+        temp('medaka/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_precision-recall.tsv'),
+        'medaka/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_query.tsv',
+        temp('medaka/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_summary.vcf'),
+        temp('medaka/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_superclusters.tsv'),
+        temp('medaka/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_switchflips.tsv'),
+        temp('medaka/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_truth.tsv')
+    params:
+        prefix='medaka/vcfdist_{tool}_{species}_{length}_{error_rate}_{param}_'
+
+    conda:
+        'env/tabix.yaml'
+    shell:
+        'vcfdist {input.querry} {input.GT} {input.ref} -p {params.prefix} '
 
 #-------------converst sam-bam-stat rules-------------------------------
 rule sam_stat:
@@ -350,24 +542,45 @@ rule minimap2:
     shell:
         "minimap2 -ax map-ont {params} {input.ref} {input.reads} > {output}"
 
-rule all_graphmap2:
-    input:
-        expand("mapped_reads/graphmap2_{species}_{length}_{error_rate}_{param}.sam",species=config['species'],length=config['length'],param=config['param']['graphmap2']['command'],error_rate=config['error_rate'])
 
-rule graphmap2:
+rule all_minimap2old_old:
     input:
-        ref= 'data/ref_{species}.fasta',
+        expand("mapped_reads/minimap2old_{species}_{length}_{error_rate}_{param}.sam", species=config['species'],length=config['length'],param=config['param']['minimap2']['command'],error_rate=config['error_rate'])
+
+rule minimap2old:
+    input:
+        ref='data/ref_{species}.fasta',
         reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq'
     output:
-        "mapped_reads/graphmap2_{species}_{length}_{error_rate}_{param}.sam"
+        "mapped_reads/minimap2old_{species}_{length}_{error_rate}_{param}.sam"
     conda:
-        "env/graphmap2.yaml"
+        "env/minimap2old.yaml"
     params:
         getparam
     benchmark:
-        "benchmarks/graphmap2_{species}_{length}_{error_rate}_{param}.benchmark.txt"
+        "benchmarks/minimap2_{species}_{length}_{error_rate}_{param}.benchmark.txt"
     shell:
-        "graphmap2 align --auto-rebuild-index -r {input.ref} -d {input.reads} {params} > {output}"
+        "minimap2 -ax map-ont {params} {input.ref} {input.reads} > {output}"
+
+
+# rule all_graphmap2:
+#     input:
+#         expand("mapped_reads/graphmap2_{species}_{length}_{error_rate}_{param}.sam",species=config['species'],length=config['length'],param=config['param']['graphmap2']['command'],error_rate=config['error_rate'])
+
+# rule graphmap2:
+#     input:
+#         ref= 'data/ref_{species}.fasta',
+#         reads= 'data/samples/{species}_{length}_{error_rate}_reads.fastq'
+#     output:
+#         "mapped_reads/graphmap2_{species}_{length}_{error_rate}_{param}.sam"
+#     conda:
+#         "env/graphmap2.yaml"
+#     params:
+#         getparam
+#     benchmark:
+#         "benchmarks/graphmap2_{species}_{length}_{error_rate}_{param}.benchmark.txt"
+#     shell:
+#         "graphmap2 align --auto-rebuild-index -r {input.ref} -d {input.reads} {params} > {output}"
 
 
 rule all_graphmap:
@@ -707,11 +920,47 @@ if not config['realdata']:
         input:
             ref="data/ref_{species}.fasta"
         output:
-            expand('data/ref_{{species}}_{variant}.fasta',variant=VARIANT)
+            expand('data/ref_{{species}}_{variant}.fasta',variant=VARIANT),
         conda: 
             "envs/pyt.yaml"
         script:
             'script/variant_maker.py'
+
+
+    rule make_vcf:
+        input:
+            ref="data/ref_{species}.fasta",
+            var_ref=expand('data/ref_{{species}}_{variant}.fasta',variant=VARIANT)
+        output:
+            a=expand('data/ref_{{species}}_{variant}_result.vcf',variant=VARIANT),
+        conda:
+            "env/minimap2.yaml"
+        shell:
+            "for element in {input.var_ref}\n do species=$(echo $element | awk -F'[_|.]' '{{print $2}}');variant=$(echo $element | awk -F'[_|.]' '{{print $3}}');\n minimap2 -cx asm20 -t8 --cs {input.ref} $element > '${{element%.fasta}}_temp.paf';\n sort -k6,6 -k8,8n '${{element%.fasta}}_temp.paf' >'${{element%.fasta}}_temp2.paf';\n  paftools.js call -l 1 -L 1 -f {input.ref} '${{element%.fasta}}_temp2.paf' > data/ref_${{species}}_${{variant}}_result.vcf;\n rm '${{element%.fasta}}_temp.paf';rm '${{element%.fasta}}_temp2.paf' \ndone"
+
+    rule agregate_vcf:
+        input:
+            expand('data/ref_{{species}}_{variant}_result.vcf.gz',variant=VARIANT),
+        output:
+            final='data/ref_{species}_agregate.vcf.gz',
+            tmp=temp('data/ref_{species}_agregate_temp.vcf')
+        conda:
+            "env/tabix.yaml"
+        shell:
+            "bcftools merge --force-samples -m none {input} | bgzip > {output.tmp}.gz ;tabix {output.tmp}.gz; truvari collapse -i {output.tmp}.gz -o {output.final}"
+
+    rule index_zip_var:
+        input:
+            'data/ref_{species}_{variant}_result.vcf'
+        output:
+            a='data/ref_{species}_{variant}_result.vcf.gz',
+            b='data/ref_{species}_{variant}_result.vcf.gz.tbi'#)temp(
+        conda:
+             "env/tabix.yaml"
+        shell:
+            "cat {input};bgzip -c {input} > {output.a};tabix -f -p vcf {output.a}"
+
+
 
     rule varfile:
         input:

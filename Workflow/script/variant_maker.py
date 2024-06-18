@@ -16,7 +16,7 @@ def makerandom(file,wt,datapath,variant,tx,fvar):
     lmut=[]
     #tirer au sort toute les mutations puis les appliquer dans l'ordre decroissant
     fvar.write('V'+str(variant-1)+find_species(datapath)+'_'+str(len(seq))+':\n')
-    for pos in random.sample(range(0, len(seq)), calcnbmut(len(seq),tx)):
+    for pos in random.sample(range(100, len(seq)-100), calcnbmut(len(seq),tx)):
         
         nbevent=random.randint(0,2)
         if nbevent==0:   

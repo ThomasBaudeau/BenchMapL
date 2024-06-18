@@ -48,6 +48,20 @@ try:
     shutil.rmtree('mapped_reads')
 except:
     pass
+
+try:
+    shutil.rmtree('bcf')
+except:
+    pass
+try:
+    shutil.rmtree('clair3')
+except:
+    pass
+
+try:
+    shutil.rmtree('benchmarks')
+except:
+    pass
 print("80%")
 try:
    os.remove('variant_file.txt')
@@ -56,6 +70,15 @@ except:
 
 try:
    os.remove('data/variant_file.txt')
+except:
+    pass
+try:
+   os.remove('data/ref_covid.bed')
+except:
+    pass
+
+try:
+   os.remove('data/ref_vih.bed')
 except:
     pass
 

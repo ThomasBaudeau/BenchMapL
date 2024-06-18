@@ -1,7 +1,7 @@
-realdata: False
-length: [500,7500]
+realdata: True
+length: ['real']
 species: ['covid']
-error_rate: ['0.95','0.99','0.90']
+error_rate: ['real']
 model: 'R103'
 model_m: 'r103'
 cig_modif: False
@@ -56,14 +56,14 @@ param:
   #   name: ['default*','H1','H2','H3','H4','H5','H6'],
   #   command: ['--syncs#11#--synct#3','--syncs#14#--synct#6','--syncs#5#--synct#3']}
 
-contamination: 10 #20% de read humain
+contamination: 1 #20% de read humain
 seed : 12345
 
-number : 1000
+number : 109
 
 variant: { 
   number: 1,
-  specify: [2],
-  taux: [99]}
+  specify: [10],
+  taux: [33]}
 #for specifie type of snp {'i':['0r'],'d':['0r'],'s':['1r']} else type 
 #number variant will be number/1000 variation

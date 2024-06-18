@@ -29,6 +29,13 @@ class result:
         self.group1=[]
         self.group2=[]
         self.missaligned=0
+        self.softclip=0
+        self.sclip0=0
+        self.sclip5=0
+        self.sclip10=0
+        self.sclip20=0
+        self.sclip20p=0
+
 
     def setname(self,name):
         """set name
@@ -101,6 +108,24 @@ class result:
             self.cor_10+=1
         elif num==20:
             self.cor_20+=1
+
+
+    def increm_sclip(self,num=0):
+        """increm cor
+
+        :param num: num of the cor, defaults to 0
+        :type num: int, optional
+        """
+        if num not in [0,5,10,20]:
+            raise
+        elif num==0:
+            self.sclip0+=1
+        elif num==5:
+            self.sclip5+=1
+        elif num==10:
+            self.sclip10+=1
+        elif num==20:
+            self.sclip20+=1
 
     def get_max_cor(self):
         return self.cor+self.cor_5+self.cor_10+self.cor_20
@@ -194,21 +219,45 @@ def read_align(resu,read):
     :return: result of the operation true if read is increm else false
     :rtype: boolean
     """
+    scliptt=0
     try: 
         st_ref,mbase_ref,end_ref=parsenamesimu(read.query_name)
         st_alg=read.reference_start
+        sclip=True
         
         end_alg=read.reference_end
         mbase_alg=read.reference_length
         crit1=abs(st_ref-st_alg)
         crit2=abs(end_ref-end_alg)
+        if read.cigartuples[0][0]==4:
+            scliptt+=read.cigartuples[0][1]
+        if read.cigartuples[-1][0]==4:
+            scliptt+=read.cigartuples[-1][1]
         for threshold in [0,5,10,20]:
+            if sclip and (scliptt)<=threshold:
+                resu.increm_sclip(threshold)
+                sclip=False
+            if sclip and (scliptt)>20:
+                resu.sclip20p+=1
+                sclip=False
+
             if (crit1 + crit2)<=threshold :
                 resu.increm_cor(threshold)
                 return True
+        
         return False 
     except:
-        resu.increm_cor(0) 
+        if read.cigartuples[0][0]==4:
+            scliptt+=read.cigartuples[0][1]
+        if read.cigartuples[-1][0]==4:
+            scliptt+=read.cigartuples[-1][1]
+        for threshold in [0,5,10,20]:
+            if sclip and (scliptt)<=threshold:
+                resu.increm_sclip(threshold)
+                sclip=False
+            if sclip and (scliptt)>20:
+                resu.sclip20p+=1
+                sclip=False 
         return True
     
 
@@ -345,8 +394,33 @@ def get_all_cor(results):
             data_cor5.append(result.corpercent(result.cor_5))
             data_cor10.append(result.corpercent(result.cor_10))
             data_cor20.append(result.corpercent(result.cor_20))
+
         ttread.append(result.mapped)
     return [data_cor,data_cor5,data_cor10,data_cor20,data_corsup],ttread
+
+
+def get_all_sclip(results):
+    """return list of list of each cor for each result of a groups
+
+    :param results: list of resu object
+    :type results: list
+    :return: list of list of each cor 
+    :rtype: list
+    """
+    data_sclip0=[]
+    data_sclip5=[]
+    data_sclip10=[]
+    data_sclip20=[]
+    data_sclip20p=[]
+    ttread=[]
+    for result in results:
+        data_sclip0.append(result.corpercent(result.sclip0))
+        data_sclip5.append(result.corpercent(result.sclip5))
+        data_sclip10.append(result.corpercent(result.sclip10))
+        data_sclip20.append(result.corpercent(result.sclip20))
+        data_sclip20p.append(result.corpercent(result.sclip20p))
+        ttread.append(result.mapped)
+    return [data_sclip0,data_sclip5,data_sclip10,data_sclip20,data_sclip20p],ttread
 
 def plot_histoMU(results,output):
     """plot histogram of unmapped /mapped reads 
@@ -497,7 +571,9 @@ def multiple_cor(results,output):
         plt.clf()
         plt.figure(figsize=(16, 10))
         plt.rcParams.update({'font.size': 16})
+        
         data,ttread = get_all_cor(results)
+        print(data)
         columns = get_label(results)
         rows = ['perfect','5b shift','10b shift','20b shift', '>20b shift','# reads']
         values = np.arange(0, 120, 20)
@@ -535,6 +611,60 @@ def multiple_cor(results,output):
         plt.title('Proportion of correctly located read')
         
         plt.savefig(output,dpi=900,format='pdf')
+
+
+def multiple_sclip(results,output):
+    """plot of the number of reads correctly localised by categories 
+
+    :param results: list of each resu of the groups
+    :type results: list
+    :param output: name of the output
+    :type output: str
+    """
+    if output:
+        plt.clf()
+        plt.figure(figsize=(16, 10))
+        plt.rcParams.update({'font.size': 16})
+        data,ttread = get_all_sclip(results)
+        print(data)
+        columns = get_label(results)
+        rows = ['perfect','5b softclip','10b softclip','20b softclip', '>20b softclip','# reads']
+        values = np.arange(0, 120, 20)
+        colors = plt.cm.BuPu(np.linspace(0.15, .65, len(rows)))
+        n_rows = len(data)
+        index = np.arange(len(columns)) +0.2
+        bar_width = 0.5
+        y_offset = np.zeros(len(columns))
+        y=np.zeros(len(columns))
+        cell_text = []
+        for row in range(n_rows):
+            a=plt.bar(index, data[row], bar_width, bottom=y, color=colors[row])
+            y_offset = data[row]
+            y=y+data[row]
+            #changer la facon de calc le total
+            cell_text.append(['%2i' % round(x)  for x in y_offset])
+        cell_text.append(['%2i' % round(x)  for x in ttread])
+        
+        the_table = plt.table(cellText=cell_text,
+                            rowLabels=rows, 
+                            alpha=1, 
+                            rowColours=colors, 
+                            colLabels=columns,
+                            loc='bottom'
+                            )
+        the_table.scale(1, 1.7)
+        the_table.auto_set_font_size(True)
+        #the_table.set_fontsize(15)
+        plt.subplots_adjust(left=0.12, bottom=0.19)
+        plt.ylabel("Percentage of reads")
+        plt.yticks(values, ['%d' % val for val in values])
+        # for tx,ypos in zip(ttread,index):
+        #     plt.text(ypos,20,tx,color='black')
+        plt.xticks([])
+        plt.title('Proportion of soft_clipped read')
+        
+        plt.savefig(output,dpi=900,format='pdf')
+
 
 def rsnake(myparam,arg1,arg2=False,arg3=False,arg4=None):
     if arg4!=None:
@@ -611,6 +741,7 @@ def plot_params(data_path, out_path, myparam):
                 resu=countdiff(bamFP)
                 resu.setname(name)
                 results.append(resu)
+            multiple_sclip(results,find_output(key,'bc4', out_path))
             multiple_cor(results,find_output(key,'bc2', out_path))    
             plot_histoMU(results,find_output(key,'bc1', out_path))
             common_error_gp2(results,find_output(key,'bc3', out_path))
@@ -692,7 +823,8 @@ def plot_simple(data_path, out_path, myparam,test=False):
                 result_var.append(resu2)
             common_error_gp1(results,find_output(key,'rl4', out_path))
             common_error_gp2(results,find_output(key,'rl5', out_path))
-            multiple_cor(results,find_output(key,'rl2', out_path))    
+            multiple_cor(results,find_output(key,'rl2', out_path))
+            multiple_sclip(results,find_output(key,'rl22', out_path))    
             plot_histoMU(results,find_output(key,'rl1', out_path))
             plot_histoNotHuman(results,find_output(key,'rl3', out_path))
             upsetplot_var(result_var,find_output(key,'rl6', out_path))
@@ -717,6 +849,19 @@ def parsevariant(file,resudic):
     resu.set_F1()
     return resu
 
+def parsevariantvcfdist(file):
+    resu=resu_bcf()
+
+    bcf_in=open(file,'r').readlines()[-1]
+    res=bcf_in.split('\t')
+    filename=file.replace('vcfdist_','')
+    resu.name=findname(filename)
+    resu.TP=int(res[4])
+    resu.FN=int(res[5])
+    resu.FP=int(res[6])
+    resu.setPr_rec()
+    resu.set_F1()
+    return resu
 
 
 def plotvariant(data_path, out_path, myparam,test=False) :
@@ -743,7 +888,18 @@ def find_info (file,par):
     return {'tname':param[0],'specie':param[1],'lenght':param[2],'er':param[3],'param':param[4],'cov':par['number'],'model':par['model']}
 
 
-def files_stats(data_path, out_path, myparam):
+def combine_path(a,b):
+    dico={}
+    for path1 in a:
+        ok=path1.replace('medaka/','').replace('.vcf','')
+        for path2 in b:
+            ok1=path2.replace('medaka/vcfdist_','').replace('_precision-recall-summary.tsv','')
+            if  ok==ok1:
+                dico[path1]=path2
+                continue
+    return dico
+
+def files_stats(data_path,vcfdist_path, out_path, myparam):
     """main function
 
     :param data_path: snakemake.input
@@ -753,6 +909,7 @@ def files_stats(data_path, out_path, myparam):
     :param myparam: config files
     :type myparam: list
     """
+    dic=combine_path(data_path,vcfdist_path)
     files=list(data_path)
     idx=0
     for file in tq.tqdm(files):
@@ -763,7 +920,11 @@ def files_stats(data_path, out_path, myparam):
         resu=countdiff(bamFP)
         resu2=parsevariant(file,parseresuvar(findspecies(file)))
         resu3=parsevariant(file.replace('medaka','bcf'),parseresuvar(findspecies(file)))
-        infos.update(mapped=resu.mapped,unmapped=resu.unmapped,wrongalign=resu.missaligned,r0=resu.cor,r5=resu.cor_5,r10=resu.cor_10,r20=resu.cor_20,TP=resu2.TP,FN=resu2.FN,FP=resu2.FP,precison=resu2.Pr,recall=resu2.rec,f1score=resu2.f1,bc_TP=resu3.TP,bc_FN=resu3.FN,bc_FP=resu3.FP,bc_precison=resu3.Pr,bc_recall=resu3.rec,bc_f1score=resu3.f1)
+        resu6=parsevariant(file.replace('medaka','clair3'),parseresuvar(findspecies(file)))
+        resu4=parsevariantvcfdist(dic[file],)
+        resu5=parsevariantvcfdist(dic[file].replace('medaka','bcf'))
+        resu7=parsevariantvcfdist(dic[file].replace('medaka','clair3'))
+        infos.update(mapped=resu.mapped,unmapped=resu.unmapped,wrongalign=resu.missaligned,r0=resu.cor,r5=resu.cor_5,r10=resu.cor_10,r20=resu.cor_20,TP=resu2.TP,FN=resu2.FN,FP=resu2.FP,precison=resu2.Pr,recall=resu2.rec,f1score=resu2.f1,bc_TP=resu3.TP,bc_FN=resu3.FN,bc_FP=resu3.FP,bc_precison=resu3.Pr,bc_recall=resu3.rec,bc_f1score=resu3.f1,medaka_vcdist_Tp=resu4.TP,medaka_vcdist_FN=resu4.FN,medaka_vcdist_FP=resu4.FP,medaka_vcdist_precison=resu4.Pr,medaka_vcdist_recall=resu4.rec,medaka_vcdist_f1score=resu4.f1,bc_vcdist_TP=resu5.TP,bc_vcdist_FN=resu5.FN,bc_vcdist_FP=resu5.FP,bc_vcdist_precison=resu5.Pr,bc_vcdist_recall=resu5.rec,bc_vcdist_f1score=resu5.f1,clair3_TP=resu6.TP,clair3_FN=resu6.FN,clair3_FP=resu6.FP,clair3_precison=resu6.Pr,clair3_recall=resu6.rec,clair3_f1score=resu6.f1,clair3_vcdist_TP=resu7.TP,clair3_vcdist_FN=resu7.FN,clair3_vcdist_FP=resu7.FP,clair3_vcdist_precison=resu7.Pr,clair3_vcdist_recall=resu7.rec,clair3_vcdist_f1score=resu7.f1)
         if idx==0:
             df=pd.DataFrame(data=infos,index=[idx])
         else:
@@ -799,4 +960,25 @@ def parseresuvar(file=''):
     return result
 
 
+
+# bam=pysam.AlignmentFile('Workflow/mapped_reads/minimap2_vih_7500_0.99_#.bam')
+# for read in bam:
+#     ok= False
+#     st_alg=read.reference_start
+#     st_ref,mbase_ref,end_ref=parsenamesimu(read.query_name)
+#     end_alg=read.reference_end
+#     mbase_alg=read.reference_length
+#     crit1=abs(st_ref-st_alg)
+#     crit2=abs(end_ref-end_alg)
+#     if crit1 !=0 or crit2 !=0:
+#         ok=True
+#     if read.cigartuples[0][0]==4:
+#         ok=True
+#         read.cigartuples[0][1]
+#     if read.cigartuples[-1][0]==4:
+#         ok=True
+#         read.cigartuples[-1][1]
+#     if ok:
+#         ok=False
+#         print(crit1,read.cigartuples[0][1],crit2,read.cigartuples[-1][1])
 #rajouter +1 quand insertion ou délét
