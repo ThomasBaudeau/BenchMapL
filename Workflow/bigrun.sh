@@ -17,7 +17,10 @@ for f in *;
 	mv resultfinal $var2/config$count/;
 	mv bcf $var2/config$count/
     mv medaka $var2/config$count/
-	mv plot $var2/config$count/
+	mv plots $var2/config$count/
+	mv benchmarks $var2/config$count/
+	mv mapped_reads $var2/config$count/
+	mv data/samples/ $var2/config$count/
     python3 clear.py;
 	cd ../../../data;
 	echo echo $count / $tt

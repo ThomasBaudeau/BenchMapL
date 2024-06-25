@@ -972,7 +972,7 @@ if not config['realdata']:
             expand('data/ref_{{species}}_{variant}_result.vcf.gz',variant=VARIANT),
         output:
             final=temp('data/ref_{species}_agregate_temp1.vcf'),
-            tmp=temp('data/ref_{species}_agregate_temp.vcf.gz')
+            tmp=temp('data/ref_{species}_agregate_temp.vcf.gz'),
         conda:
             "env/tabix.yaml"
         shell:
@@ -982,11 +982,12 @@ if not config['realdata']:
             input:
                 'data/ref_{species}_agregate_temp1.vcf',
             output:
-                'data/ref_{species}_agregate.vcf.gz',
+                a='data/ref_{species}_agregate.vcf.gz',
+                b='data/samples/ref_{species}_agregate.vcf.gz'
             conda:
                 "env/tabix.yaml"
             shell:
-                './scripts/parse_vcf.sh {input} {output};gzip {output}'
+                './scripts/parse_vcf.sh {input} {output};gzip {output.a};cp {output.a} {output.b}'
 
 
     rule index_zip_var:
@@ -1006,9 +1007,10 @@ if not config['realdata']:
         input:
             expand('data/ref_{{species}}_{variant}.fasta',variant=VARIANT)
         output:
-            a="data/{species}_variant_file.txt"
+            a="data/{species}_variant_file.txt",
+            b="data/samples/{species}_variant_file.txt",
         shell:
-            "mv {wildcards.species}_variant_file.txt {output}"
+            "mv {wildcards.species}_variant_file.txt {output.a};cp {output.a} {output.b}"
         
 
             

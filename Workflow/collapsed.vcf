@@ -6,7 +6,7 @@
 ##INFO=<ID=QSTRAND,Number=1,Type=String,Description="Query strand">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 ##bcftools_mergeVersion=1.20+htslib-1.20
-##bcftools_mergeCommand=merge --force-samples -m none data/ref_covid_WT_result.vcf.gz data/ref_covid_V0_result.vcf.gz data/ref_covid_V1_result.vcf.gz; Date=Tue Jun 25 11:42:55 2024
+##bcftools_mergeCommand=merge --force-samples -m none data/ref_covid_WT_result.vcf.gz data/ref_covid_V0_result.vcf.gz data/ref_covid_V1_result.vcf.gz; Date=Tue Jun 25 13:49:32 2024
 ##INFO=<ID=TruScore,Number=1,Type=Integer,Description="Truvari score for similarity of match">
 ##INFO=<ID=PctSeqSimilarity,Number=1,Type=Float,Description="Pct sequence similarity between this variant and its closest match">
 ##INFO=<ID=PctSizeSimilarity,Number=1,Type=Float,Description="Pct size similarity between this variant and its closest match">
