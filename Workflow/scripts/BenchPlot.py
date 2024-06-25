@@ -920,11 +920,11 @@ def files_stats(data_path,vcfdist_path, out_path, myparam):
         resu=countdiff(bamFP)
         resu2=parsevariant(file,parseresuvar(findspecies(file)))
         resu3=parsevariant(file.replace('medaka','bcf'),parseresuvar(findspecies(file)))
-        resu6=parsevariant(file.replace('medaka','clair3'),parseresuvar(findspecies(file)))
+        #resu6=parsevariant(file.replace('medaka','clair3'),parseresuvar(findspecies(file)))
         resu4=parsevariantvcfdist(dic[file],)
         resu5=parsevariantvcfdist(dic[file].replace('medaka','bcf'))
-        resu7=parsevariantvcfdist(dic[file].replace('medaka','clair3'))
-        infos.update(mapped=resu.mapped,unmapped=resu.unmapped,wrongalign=resu.missaligned,r0=resu.cor,r5=resu.cor_5,r10=resu.cor_10,r20=resu.cor_20,TP=resu2.TP,FN=resu2.FN,FP=resu2.FP,precison=resu2.Pr,recall=resu2.rec,f1score=resu2.f1,bc_TP=resu3.TP,bc_FN=resu3.FN,bc_FP=resu3.FP,bc_precison=resu3.Pr,bc_recall=resu3.rec,bc_f1score=resu3.f1,medaka_vcdist_Tp=resu4.TP,medaka_vcdist_FN=resu4.FN,medaka_vcdist_FP=resu4.FP,medaka_vcdist_precison=resu4.Pr,medaka_vcdist_recall=resu4.rec,medaka_vcdist_f1score=resu4.f1,bc_vcdist_TP=resu5.TP,bc_vcdist_FN=resu5.FN,bc_vcdist_FP=resu5.FP,bc_vcdist_precison=resu5.Pr,bc_vcdist_recall=resu5.rec,bc_vcdist_f1score=resu5.f1,clair3_TP=resu6.TP,clair3_FN=resu6.FN,clair3_FP=resu6.FP,clair3_precison=resu6.Pr,clair3_recall=resu6.rec,clair3_f1score=resu6.f1,clair3_vcdist_TP=resu7.TP,clair3_vcdist_FN=resu7.FN,clair3_vcdist_FP=resu7.FP,clair3_vcdist_precison=resu7.Pr,clair3_vcdist_recall=resu7.rec,clair3_vcdist_f1score=resu7.f1)
+        #resu7=parsevariantvcfdist(dic[file].replace('medaka','clair3'))
+        infos.update(mapped=resu.mapped,unmapped=resu.unmapped,wrongalign=resu.missaligned,r0=resu.cor,r5=resu.cor_5,r10=resu.cor_10,r20=resu.cor_20,TP=resu2.TP,FN=resu2.FN,FP=resu2.FP,precison=resu2.Pr,recall=resu2.rec,f1score=resu2.f1,bc_TP=resu3.TP,bc_FN=resu3.FN,bc_FP=resu3.FP,bc_precison=resu3.Pr,bc_recall=resu3.rec,bc_f1score=resu3.f1,medaka_vcdist_Tp=resu4.TP,medaka_vcdist_FN=resu4.FN,medaka_vcdist_FP=resu4.FP,medaka_vcdist_precison=resu4.Pr,medaka_vcdist_recall=resu4.rec,medaka_vcdist_f1score=resu4.f1,bc_vcdist_TP=resu5.TP,bc_vcdist_FN=resu5.FN,bc_vcdist_FP=resu5.FP,bc_vcdist_precison=resu5.Pr,bc_vcdist_recall=resu5.rec,bc_vcdist_f1score=resu5.f1)#clair3_TP=resu6.TP,clair3_FN=resu6.FN,clair3_FP=resu6.FP,clair3_precison=resu6.Pr,clair3_recall=resu6.rec,clair3_f1score=resu6.f1,clair3_vcdist_TP=resu7.TP,clair3_vcdist_FN=resu7.FN,clair3_vcdist_FP=resu7.FP,clair3_vcdist_precison=resu7.Pr,clair3_vcdist_recall=resu7.rec,clair3_vcdist_f1score=resu7.f1)
         if idx==0:
             df=pd.DataFrame(data=infos,index=[idx])
         else:
@@ -937,8 +937,10 @@ def upsetplot_var(results,output='test.pdf'):
     if output:
         plt.clf()
         variants={}
+        print(results)
         for read in results:
-            variants[read.name]=read.group
+            variants[read.name]=list(set(read.group))
+        print(variants)
         plot1=from_contents(variants)
         try:
             polt = UpSet(plot1,show_counts=True,element_size=21).plot()
