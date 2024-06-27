@@ -9,12 +9,9 @@ param:
   minimap2: {
     name: ['default','big','small'],
     command: ['#','-k#12#-w#4','-k#7#-w#5']}
-  #mm2f: {
-    #name: ['default','C1','C2','C3*','C4','C5','C6'],
-    #command: ['#','-k#12','-k#10','-k#8#-w#1','-w#10','-w#5','-w#1']}
-  graphmap2: {
-    name: ['default','B1','B2*'],
-    command: ['#','-x#sensitive','-x#illumina']} #'-a#sg','-a#sggotoh'
+  minimap2old: {
+    name: ['default','big','small'],
+    command: ['#','-k#12#-w#4','-k#7#-w#5']}
   graphmap: {
     name: ['default','A1','A2'],
     command: ['#','-k#7#-A#8','-k#5#-A#7#--freq-percentile#1.0']}

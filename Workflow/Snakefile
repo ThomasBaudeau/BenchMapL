@@ -3,7 +3,7 @@ import os
 
 
 
-configfile: '../config/config_test.yaml'
+configfile: '../config/config.yaml'
 TOOLS= [tool for tool in config['param']]
 #Path
 
