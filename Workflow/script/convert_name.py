@@ -1,4 +1,5 @@
 import re
+from tqdm import tqdm
 
 def openfile(file):
     """open a file 
@@ -36,14 +37,16 @@ def findr(x):
 def do_something():#(data_path, out_path, myparam):
     """main function for rename all the reads in a fasta file
     """
+    print('#############  begin correct name ############# ')
     tab3=openfile(snakemake.input[0]+'_0001.fastq')
     tab2=list(filter(filt_1,openfile(snakemake.input[0]+'_0001.maf')))
     files1=open(snakemake.output[0],'a')
-    for nb in range(int(len(tab2)/2)):
+    for nb in tqdm(range(int(len(tab2)/2))):
         temp=list(filter(None,tab2[nb*2].split(' ')))
         files1.write('@'+snakemake.output[0].split('_')[2]+'_'+(tab3[4*nb].replace('_','N').replace('\n','')+'_'+temp[2]+'_aligned_0_'+findr(tab2[(nb*2)+1])+'_0_'+temp[3]+'\n')[1:])
         files1.write(tab3[(4*nb)+1])
         files1.write("+\n")
         files1.write(tab3[(4*nb)+3])
+    print("############# end correct name ############# ")
     files1.close()
 do_something()#(snakemake.input[0], snakemake.output[0], snakemake.config["param"])
