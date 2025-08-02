@@ -6,4 +6,4 @@ dependencies:
   - tabix
   - truvari
   - bcftools
-  - vcfdist
+  - vcfdist = 2.5.3

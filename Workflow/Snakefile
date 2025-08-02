@@ -1,6 +1,6 @@
 import os
 # config file name
-
+os.environ["CUDA_VISIBLE_DEVICES"]=''
 
 
 configfile: '../config/config.yaml'
@@ -267,6 +267,11 @@ rule run_params:
 
 
 #----------------------medakarule-------------------------------------
+
+envvars:
+    "CUDA_VISIBLE_DEVICES"
+
+
 rule medaka_concensus:
     input:
         ref='data/ref_{species}.fasta',
@@ -275,10 +280,15 @@ rule medaka_concensus:
         temp('medaka/{tool}_{species}_{length}_{error_rate}_{param}_concensus.fasta')
     params:
         model='data/model/'+config['model_m']+'_min_high_g360_model.hdf5',
+        x=os.environ["CUDA_VISIBLE_DEVICES"]
     conda:
         'env/medaka.yaml'
     shell:
-        "medaka consensus {input.read} {output} --model {params.model} --batch_size 100 --threads 1"#"touch {output}"
+        "echo {params.x};medaka consensus {input.read} {output} --model {params.model} --batch_size 100  --threads 1"#"touch {output}"
+
+rule make_bed_raw:
+    input:
+       expand('data/ref_{species}.bed',species=['vih','covid'])
 
 
 rule make_bed:
@@ -935,11 +945,21 @@ if not config['realdata']:
             human='data/supl/human_read.fastq',
             data="result/pbsim2/{species}_{length}_{error_rate}_variantreads1.fastq",
         output:
-            "result/pbsim2/{species}_{length}_{error_rate}_variantreads.fastq"
+            temp("result/pbsim2/{species}_{length}_{error_rate}_variantreads_inco.fastq")
         conda:
             "envs/pyt.yaml"
         script:
             'script/select_human_pbsim.py'
+
+    rule convert_header:
+        input:
+            read="result/pbsim2/{species}_{length}_{error_rate}_variantreads_inco.fastq",
+        output:
+            temp("result/pbsim2/{species}_{length}_{error_rate}_variantreads.fastq")
+        conda:
+            'envs/perl.yaml'
+        shell:
+            'script/convert1.pl {input.read} >{output}'
 
     rule build_variant: 
         input:
@@ -1083,7 +1103,7 @@ if not config['realdata']:
         shell:
             "sed -i -e 's/ //g' {input.link};sed -i -e 's/;/_/g' {input.link}> {output}"
 
-    rule convert_header:
+    rule temps_correct:
         input:
             link="result/{tool}/{species}_{variant}_{length}_{error_rate}_reads1.fasta",
             read="result/{tool}/simulated_{species}_{variant}_{length}_{error_rate}",
@@ -1093,7 +1113,7 @@ if not config['realdata']:
         conda:
             'envs/perl.yaml'
         shell:
-            'script/convert1.pl {input.read} >{output}'
+            'cat {input.read} >{output}'
 
     rule one_line:
         input: 

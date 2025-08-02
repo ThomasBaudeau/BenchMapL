@@ -44,7 +44,7 @@ number : 100
 
 variant: { 
   number: 1,
-  specify: [20],
+  specify: [9],
   taux: [99]}
 #for specifie type of snp {'i':['0r'],'d':['0r'],'s':['1r']} else type 
 #number variant will be number/1000 variation

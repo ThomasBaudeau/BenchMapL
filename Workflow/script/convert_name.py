@@ -39,7 +39,9 @@ def do_something():#(data_path, out_path, myparam):
     """
     print('#############  begin correct name ############# ')
     tab3=openfile(snakemake.input[0]+'_0001.fastq')
+    print('Finish Step 1 : fastq open ')
     tab2=list(filter(filt_1,openfile(snakemake.input[0]+'_0001.maf')))
+    print('Finish Step 2 : maf filtered ')
     files1=open(snakemake.output[0],'a')
     for nb in tqdm(range(int(len(tab2)/2))):
         temp=list(filter(None,tab2[nb*2].split(' ')))

@@ -3,7 +3,7 @@ from upsetplot import from_contents
 from upsetplot import UpSet
 import matplotlib
 
-
+import glob
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -573,7 +573,6 @@ def multiple_cor(results,output):
         plt.rcParams.update({'font.size': 16})
         
         data,ttread = get_all_cor(results)
-        print(data)
         columns = get_label(results)
         rows = ['perfect','5b shift','10b shift','20b shift', '>20b shift','# reads']
         values = np.arange(0, 120, 20)
@@ -626,7 +625,6 @@ def multiple_sclip(results,output):
         plt.figure(figsize=(16, 10))
         plt.rcParams.update({'font.size': 16})
         data,ttread = get_all_sclip(results)
-        print(data)
         columns = get_label(results)
         rows = ['perfect','5b softclip','10b softclip','20b softclip', '>20b softclip','# reads']
         values = np.arange(0, 120, 20)
@@ -728,7 +726,6 @@ def plot_params(data_path, out_path, myparam):
     """
     files=list(data_path)
     groups=group_input_param(files,myparam)
-    print(groups)
     for key in groups.keys():
         if find_output(key,outpath=out_path): 
             lst=groups[key]
@@ -815,6 +812,7 @@ def plot_simple(data_path, out_path, myparam,test=False):
                 bamFP = pysam.AlignmentFile(tool, "rb")
                 pysam.set_verbosity(save)
                 name=findname(tool)
+                
                 resu=countdiff(bamFP)
                 file=tool.replace('mapped_reads','medaka').replace('.bam','.vcf')
                 resu2=parsevariant(file,parseresuvar(findspecies(file)))
@@ -851,11 +849,8 @@ def parsevariant(file,resudic):
 
 def parsevariantvcfdist(file):
     resu=resu_bcf()
-
     bcf_in=open(file,'r').readlines()[-1]
     res=bcf_in.split('\t')
-    filename=file.replace('vcfdist_','')
-    resu.name=findname(filename)
     resu.TP=int(res[4])
     resu.FN=int(res[5])
     resu.FP=int(res[6])
@@ -885,7 +880,26 @@ def plotvariant(data_path, out_path, myparam,test=False) :
 
 def find_info (file,par):
     param=file[file.index("/")+1:].split('_')
-    return {'tname':param[0],'specie':param[1],'lenght':param[2],'er':param[3],'param':param[4],'cov':par['number'],'model':par['model']}
+    for f in open(par,'r').readlines():
+        try:
+            if f[0:5]=='model':
+                model=f[f.index("'")+1:f.index("'",f.index("'")+1)]
+        except: 
+            pass
+        ok=False
+        try:
+            if f[0:6]=='number':
+                ok=True
+        except:
+            pass
+        if ok:
+            try:
+                number=int(f[f.index(":")+1:f.index("\n")].replace(' ',''))
+                ok=False
+            except:
+                print(f[f.index(":"):])
+                number=int(f[f.index(":")+1:f.index("\n")])
+    return {'tname':param[0].split('/')[1],'specie':param[1],'lenght':param[2],'er':param[3],'param':param[4],'cov':number,'model':model}
 
 
 def combine_path(a,b):
@@ -899,6 +913,18 @@ def combine_path(a,b):
                 continue
     return dico
 
+def parseresuvar(patha,file=''):
+    bcf_resu=open(os.path.join(patha,'data/',file+'_variant_file.txt'),'r')
+    tab=bcf_resu.readlines()
+    result={}
+    for elem in tab:
+        if ':' in elem.replace('\n','')[-1]:
+            pass
+        else:
+            data=elem.split('\t')
+            result[data[1]]=data[2]
+    return result
+
 def files_stats(data_path,vcfdist_path, out_path, myparam):
     """main function
 
@@ -909,7 +935,7 @@ def files_stats(data_path,vcfdist_path, out_path, myparam):
     :param myparam: config files
     :type myparam: list
     """
-    dic=combine_path(data_path,vcfdist_path)
+    path=data_path[1][0:data_path[1].index('medaka/')]
     files=list(data_path)
     idx=0
     for file in tq.tqdm(files):
@@ -918,11 +944,11 @@ def files_stats(data_path,vcfdist_path, out_path, myparam):
         bamFP = pysam.AlignmentFile(file.replace('medaka','mapped_reads').replace('.vcf','.bam'), "rb")
         pysam.set_verbosity(save)
         resu=countdiff(bamFP)
-        resu2=parsevariant(file,parseresuvar(findspecies(file)))
-        resu3=parsevariant(file.replace('medaka','bcf'),parseresuvar(findspecies(file)))
+        resu2=parsevariant(file,parseresuvar(path,findspecies(file)))
+        resu3=parsevariant(file.replace('medaka','bcf'),parseresuvar(path,findspecies(file)))
         #resu6=parsevariant(file.replace('medaka','clair3'),parseresuvar(findspecies(file)))
-        resu4=parsevariantvcfdist(dic[file],)
-        resu5=parsevariantvcfdist(dic[file].replace('medaka','bcf'))
+        resu4=parsevariantvcfdist(file.replace('medaka/','medaka/vcfdist_').replace('.vcf','_precision-recall-summary.tsv'))
+        resu5=parsevariantvcfdist(file.replace('medaka/','bcf/vcfdist_').replace('.vcf','_precision-recall-summary.tsv'))
         #resu7=parsevariantvcfdist(dic[file].replace('medaka','clair3'))
         infos.update(mapped=resu.mapped,unmapped=resu.unmapped,wrongalign=resu.missaligned,r0=resu.cor,r5=resu.cor_5,r10=resu.cor_10,r20=resu.cor_20,scr0=resu.sclip0,scr5=resu.sclip5,scr10=resu.sclip10,scr20=resu.sclip20,scr20p=resu.sclip20p,TP=resu2.TP,FN=resu2.FN,FP=resu2.FP,precison=resu2.Pr,recall=resu2.rec,f1score=resu2.f1,bc_TP=resu3.TP,bc_FN=resu3.FN,bc_FP=resu3.FP,bc_precison=resu3.Pr,bc_recall=resu3.rec,bc_f1score=resu3.f1,medaka_vcdist_Tp=resu4.TP,medaka_vcdist_FN=resu4.FN,medaka_vcdist_FP=resu4.FP,medaka_vcdist_precison=resu4.Pr,medaka_vcdist_recall=resu4.rec,medaka_vcdist_f1score=resu4.f1,bc_vcdist_TP=resu5.TP,bc_vcdist_FN=resu5.FN,bc_vcdist_FP=resu5.FP,bc_vcdist_precison=resu5.Pr,bc_vcdist_recall=resu5.rec,bc_vcdist_f1score=resu5.f1)#clair3_TP=resu6.TP,clair3_FN=resu6.FN,clair3_FP=resu6.FP,clair3_precison=resu6.Pr,clair3_recall=resu6.rec,clair3_f1score=resu6.f1,clair3_vcdist_TP=resu7.TP,clair3_vcdist_FN=resu7.FN,clair3_vcdist_FP=resu7.FP,clair3_vcdist_precison=resu7.Pr,clair3_vcdist_recall=resu7.rec,clair3_vcdist_f1score=resu7.f1)
         if idx==0:
@@ -932,15 +958,35 @@ def files_stats(data_path,vcfdist_path, out_path, myparam):
             df=pd.concat([df,df2])
         idx+=1  
     df.to_csv(str(out_path))
-    
+
+
+
+for f in glob.glob('*/'):
+    if f=='BenchPlotspe.py':
+        continue
+    data_path=[]
+    vcfdist_path=[]
+    out_path=os.path.join(str(f),'resultfinal2.csv')
+    print(out_path)
+    myparam=os.path.join(str(f),'config.yaml')
+    folder_medaka=os.path.join(str(f),'medaka/*.vcf')
+    folder_bcf=os.path.join(str(f),'bcf/*.vcf')
+    for i in glob.glob(folder_medaka):
+        data_path.append(i)
+    for y in glob.glob(folder_bcf):
+        vcfdist_path.append(y)
+
+    print(out_path)
+
+    files_stats(data_path,vcfdist_path, out_path, myparam)
+
+
 def upsetplot_var(results,output='test.pdf'):
     if output:
         plt.clf()
         variants={}
-        print(results)
         for read in results:
             variants[read.name]=list(set(read.group))
-        print(variants)
         plot1=from_contents(variants)
         try:
             polt = UpSet(plot1,show_counts=True,element_size=21).plot()
@@ -949,18 +995,6 @@ def upsetplot_var(results,output='test.pdf'):
         plt.title('Shared detected variants')
         plt.savefig(output,dpi=300,format='pdf')
 
-def parseresuvar(file=''):
-    bcf_resu=open('data/'+file+'_variant_file.txt','r')
-    tab=bcf_resu.readlines()
-    print(tab)
-    result={}
-    for elem in tab:
-        if ':' in elem.replace('\n','')[-1]:
-            pass
-        else:
-            data=elem.split('\t')
-            result[data[1]]=data[2]
-    return result
 
 
 

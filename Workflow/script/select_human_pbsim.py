@@ -54,7 +54,6 @@ def do_something(data_path, out_path):
         val=1
     for i in range(len(seq)):
         print(snakemake.input[1].split('_')[val])
-        time.sleep(5)
         files1.write('@ERR3278963_-1000_human_-1_R_-1_-1_-1'+str(i))
         files1.write('\n'+seq[i][0:int(snakemake.input[1].split('_')[val])])
         files1.write('\n+\n'+score[i][0:int(snakemake.input[1].split('_')[val])]+'\n')
